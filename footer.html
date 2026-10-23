@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KidsWorld Footer</title>
+    <script src="./screen-guard.js"></script>
+
+    <!-- Google Fonts: Fredoka & Nunito for playful design -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+   
+
+    <!-- FontAwesome Icons -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <style>
+      :root {
+        --primary-blue: #007bff;
+        --accent-orange: #ff9800;
+        --accent-yellow: #ffc107;
+        --bg-gradient-start: #e8f7ff;
+        --bg-gradient-end: #d0f0fd;
+        --text-dark: #2c3e50;
+        --text-muted: #6c757d;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        font-family: "Nunito", sans-serif;
+        background-color: #f4f9fc;
+      }
+
+      /* Footer Container */
+      .kids-footer {
+        background: linear-gradient(
+          180deg,
+          var(--bg-gradient-start) 0%,
+          var(--bg-gradient-end) 100%
+        );
+        padding: 50px 20px 20px 20px;
+        border-top-left-radius: 40px;
+        border-top-right-radius: 40px;
+        margin-top: 50px;
+        color: var(--text-dark);
+        box-shadow: 0px -10px 20px rgba(0, 0, 0, 0.03);
+      }
+
+      .footer-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1.5fr;
+        gap: 30px;
+      }
+
+      /* Brand Section */
+      .footer-brand .logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-family: "Fredoka", cursive;
+        font-size: 28px;
+        color: var(--primary-blue);
+        text-decoration: none;
+        margin-bottom: 15px;
+      }
+
+      .footer-brand .logo span {
+        color: var(--accent-orange);
+      }
+
+      .footer-brand p {
+        font-size: 15px;
+        line-height: 1.6;
+        color: var(--text-muted);
+        margin-bottom: 20px;
+        font-weight: 600;
+      }
+
+      /* Quick Links & Categories */
+      .footer-column h4 {
+        font-family: "Fredoka", cursive;
+        font-size: 20px;
+        color: var(--text-dark);
+        margin-bottom: 18px;
+        position: relative;
+      }
+
+      .footer-column ul {
+        list-style: none;
+      }
+
+      .footer-column ul li {
+        margin-bottom: 10px;
+      }
+
+      .footer-column ul li a {
+        text-decoration: none;
+        color: var(--text-muted);
+        font-weight: 700;
+        font-size: 15px;
+        transition: all 0.3s ease;
+        display: inline-block;
+      }
+
+      .footer-column ul li a:hover {
+        color: var(--primary-blue);
+        transform: translateX(5px);
+      }
+
+      /* Age Badges Widget in Footer */
+      .age-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .age-pill {
+        background: #ffffff;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 800;
+        color: var(--text-dark);
+        border: 2px solid #e1f0fa;
+        text-decoration: none;
+        transition: 0.2s;
+      }
+
+      .age-pill:hover {
+        border-color: var(--accent-orange);
+        background-color: #fff9f2;
+      }
+
+      /* Social Icons & Parent Area */
+      .social-links {
+        display: flex;
+        gap: 12px;
+        margin-top: 15px;
+      }
+
+      .social-links a {
+        width: 40px;
+        height: 40px;
+        background-color: #ffffff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary-blue);
+        font-size: 18px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        transition:
+          transform 0.2s,
+          background-color 0.2s;
+        text-decoration: none;
+      }
+
+      .social-links a:hover {
+        transform: translateY(-4px);
+        background-color: var(--accent-orange);
+        color: white;
+      }
+
+      /* Bottom Copyright Bar */
+      .footer-bottom {
+        max-width: 1200px;
+        margin: 40px auto 0 auto;
+        padding-top: 20px;
+        border-top: 2px dashed #cbe5f5;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        font-size: 14px;
+        color: var(--text-muted);
+        font-weight: 600;
+      }
+
+      .footer-bottom-links a {
+        color: var(--text-muted);
+        text-decoration: none;
+        margin-left: 15px;
+      }
+
+      .footer-bottom-links a:hover {
+        text-decoration: underline;
+      }
+
+      /* Responsive Design */
+      @media (max-width: 900px) {
+        .footer-container {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+
+      @media (max-width: 600px) {
+        .footer-container {
+          grid-template-columns: 1fr;
+        }
+        .footer-bottom {
+          flex-direction: column;
+          text-align: center;
+        }
+        .footer-bottom-links a {
+          margin: 0 8px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 6. FOOTER -->
+    <footer class="kids-footer">
+        <div class="footer-container">
+            <!-- Column 1: Brand Info -->
+            <div class="footer-brand">
+                <a href="#" class="logo">
+                    <span class="logo-icon">🚀</span> Kids<span class="highlight">World</span>
+                </a>
+                <p>
+                    Learn what you love, through play! Interactive games designed for
+                    curious brains of all ages.
+                </p>
+                <div class="social-links">
+                    <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                    <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+
+            <!-- Column 2: Navigation Links -->
+            <div class="footer-column">
+                <h4>Explore</h4>
+                <ul>
+                    <li><a href="#">🚀 All Adventures</a></li>
+                    <li><a href="#">🎮 Active Quests</a></li>
+                    <li><a href="#">🧩 STEM & Puzzles</a></li>
+                    <li><a href="#">📖 Language & Stories</a></li>
+                </ul>
+            </div>
+
+            <!-- Column 3: Age Groups -->
+            <div class="footer-column">
+                <h4>Age Groups</h4>
+                <div class="age-badges">
+                    <a href="./3-5AgeModule/Main.html" target="_blank" style="text-decoration: none; display: block; color: black;" footer-age-pill">🐣 3-5 Yrs</a>
+                    <a href="./6-8AgeModule/6-8-Main.html" target="_blank" style="text-decoration: none; display: block; color: black;" footer-age-pill">🚀 6-8 Yrs</a>
+                    <a href="./9-12AgeModule/9-12-Main.html" target="_blank" style="text-decoration: none; display: block; color: black;" footer-age-pill">🧩 9-12 Yrs</a>
+                    <a href="./13-15AgeModule/13-15-Main.html" target="_blank" style="text-decoration: none; display: block; color: black;" footer-age-pill">⚡ 13-15 Yrs</a>
+                </div>
+            </div>
+
+            <!-- Column 4: Parents & Safety -->
+            <div class="footer-column">
+                <h4>Parents Corner</h4>
+                <ul>
+                    <li><a href="Parent dashboard.html">⏱️ Screen Time Controls</a></li>
+                    <li><a href="Parent dashboard.html">📊 Progress Tracking</a></li>
+                    <li><a href="Parent dashboard.html">🛡️ Safety & Privacy</a></li>
+                    <li><a href="#">❓ Help & Support</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Bottom Bar -->
+        <div class="footer-bottom">
+            <p>© 2026 KidsWorld. All Rights Reserved.</p>
+            <div class="footer-bottom-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+                <a href="#">Parental Controls</a>
+            </div>
+        </div>
+    </footer>
+  </body>
+</html>

@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Shield: Logic Gate Hacker - KidsWorld</title>
+
+    <!-- Favicon: Cyber Lock -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='16' y='26' width='32' height='26' rx='6' fill='%2306B6D4' stroke='%23083344' stroke-width='2'/%3E%3Cpath d='M22 26V18a10 10 0 0 1 20 0v8' stroke='%23083344' stroke-width='4' stroke-linecap='round' fill='none'/%3E%3Ccircle cx='32' cy='39' r='3.5' fill='%23ECFEFF'/%3E%3C/svg%3E">
+
+    <!-- Bootstrap 5.3 & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Code Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@500;700&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: #020617;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            user-select: none;
+            touch-action: manipulation;
+            overflow-x: hidden;
+            color: #06b6d4;
+        }
+
+        .terminal-wrapper {
+            width: 96%;
+            max-width: 980px;
+            background: rgba(8, 15, 30, 0.95);
+            border-radius: 28px;
+            padding: 24px;
+            box-shadow: 0 0 45px rgba(6, 182, 212, 0.25), inset 0 0 20px rgba(6, 182, 212, 0.08);
+            border: 3px solid #0891b2;
+            position: relative;
+        }
+
+        .hud-pill {
+            font-family: 'Fira Code', monospace;
+            border-radius: 8px;
+            padding: 6px 14px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid #06b6d4;
+            background: rgba(8, 51, 68, 0.6);
+            color: #a5f3fc;
+        }
+
+        /* Circuit Board Area */
+        .circuit-stage {
+            position: relative;
+            width: 100%;
+            height: 410px;
+            background: radial-gradient(circle at center, #081a2e 0%, #030a14 100%);
+            border-radius: 20px;
+            border: 2px solid #0e7490;
+            margin-top: 14px;
+            overflow: hidden;
+        }
+
+        #circuitCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Controls & Gate Information Bar */
+        .status-terminal {
+            background: #030a14;
+            border: 2px solid #155e75;
+            border-radius: 18px;
+            padding: 12px 18px;
+            margin-top: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .cyber-btn {
+            font-family: 'Fira Code', monospace;
+            border-radius: 12px;
+            padding: 8px 18px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            border: 2px solid #06b6d4;
+            background: rgba(6, 182, 212, 0.15);
+            color: #ecfeff;
+            cursor: pointer;
+            transition: all 0.15s ease-in-out;
+        }
+        .cyber-btn:hover {
+            background: #06b6d4;
+            color: #020617;
+            box-shadow: 0 0 16px rgba(6, 182, 212, 0.6);
+        }
+        .cyber-btn:active {
+            transform: scale(0.96);
+        }
+
+        /* Tutorial Modal */
+        .tutorial-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(2, 6, 23, 0.94);
+            backdrop-filter: blur(8px);
+            border-radius: 28px;
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .tutorial-box {
+            background: #081a2e;
+            border: 3px solid #06b6d4;
+            border-radius: 24px;
+            padding: 24px;
+            max-width: 660px;
+            width: 100%;
+            box-shadow: 0 0 35px rgba(6, 182, 212, 0.4);
+            text-align: center;
+        }
+
+        .demo-screen {
+            width: 100%;
+            max-width: 560px;
+            height: 180px;
+            margin: 12px auto;
+            border-radius: 16px;
+            border: 2px solid #0e7490;
+            background: #020617;
+        }
+
+        #demoCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<div class="terminal-wrapper">
+    <!-- Graphical Tutorial Modal -->
+    <div class="tutorial-overlay" id="tutorialModal">
+        <div class="tutorial-box">
+            <h3 class="fw-bold text-info mb-1" id="tutHeading">SYSTEM PROTOCOL: LOGIC GATE DEFENSE</h3>
+            <p class="small text-muted mb-2" id="tutSub">Switch binary inputs (0 or 1) to transmit active current into the Target Core:</p>
+
+            <div class="demo-screen">
+                <canvas id="demoCanvas" width="560" height="180"></canvas>
+            </div>
+
+            <div class="mb-3">
+                <span class="hud-pill text-warning" id="demoGuideTxt">
+                    Step: Click Input Switch [0] to flip to [1] and power the AND Gate!
+                </span>
+            </div>
+
+            <button class="cyber-btn px-4 py-2 fs-6" onclick="closeTutorial()">
+                <i class="bi bi-shield-check me-1"></i> <span id="tutStartBtn">INITIALIZE TERMINAL (Got it!)</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Top Status Bar -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="d-flex gap-2">
+            <a href="../Home page.html" class="cyber-btn text-decoration-none">
+                <i class="bi bi-arrow-left me-1"></i> Dashboard
+            </a>
+            <button class="cyber-btn" onclick="openTutorial()">
+                <i class="bi bi-question-diamond me-1"></i> <span id="guideBtnTxt">Protocol Guide</span>
+            </button>
+        </div>
+
+        <button class="cyber-btn text-warning border-warning" id="langBtn" onclick="toggleLanguage()">
+            🌐 Switch to English
+        </button>
+
+        <div class="d-flex gap-2">
+            <span class="hud-pill text-danger" id="timerBadge">
+                <i class="bi bi-clock-history"></i> <span id="timerVal">45s</span>
+            </span>
+            <span class="hud-pill text-info" id="levelBadge">
+                LEVEL: 01 / 03
+            </span>
+        </div>
+    </div>
+
+    <!-- Active Stage -->
+    <div id="playArea">
+        <div class="circuit-stage" id="circuitStage">
+            <canvas id="circuitCanvas" width="920" height="410"></canvas>
+        </div>
+
+        <!-- Terminal Status & Gate Reference -->
+        <div class="status-terminal">
+            <div class="d-flex align-items-center gap-3">
+                <span class="text-info fw-bold"><i class="bi bi-cpu-fill me-1"></i> TARGET CORE:</span>
+                <span id="targetStatus" class="hud-pill text-danger">STATUS: LOCKED (INPUT = 0)</span>
+            </div>
+            <div class="small text-muted" id="gateRuleHint">
+                RULE: AND Gate requires BOTH inputs to be 1.
+            </div>
+        </div>
+    </div>
+
+    <!-- Victory Screen -->
+    <div id="victoryArea" class="d-none text-center py-4">
+        <div style="font-size: 5rem;">🛡️ 💻 ⚡ 🔓 🏆</div>
+        <h1 class="display-5 fw-bolder text-info mb-2" id="winTitle">FIREWALL SECURED!</h1>
+        <p class="fs-4 text-light mb-3" id="winSubtitle">You routed binary signals through every logic gate array without breach!</p>
+
+        <div class="card p-3 my-3 mx-auto shadow-sm rounded-4 border-0 text-center" style="max-width: 380px; background: #081a2e; border: 2px dashed #06b6d4 !important; color: white;">
+            <span class="text-muted fw-bold small">SECURITY CLEARANCE</span>
+            <h1 class="display-4 fw-bold text-info my-1">LEVEL 3</h1>
+            <div class="fs-3 text-warning">⭐⭐⭐⭐⭐</div>
+            <span class="badge bg-success rounded-pill px-3 py-2 mt-2 fs-6">BADGE: HARDWARE LOGIC MASTER 🔐</span>
+        </div>
+
+        <div class="d-flex justify-content-center gap-3 mt-4">
+            <button class="cyber-btn px-4 py-3 fs-5" onclick="restartMission()">
+                <i class="bi bi-arrow-clockwise me-1"></i> Reboot Terminal
+            </button>
+            <a href="../Home page.html" class="cyber-btn text-white px-4 py-3 fs-5 text-decoration-none">
+                <i class="bi bi-house-door me-1"></i> Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- 1. Sound Synthesis (Relay Click, Circuit Hum, Unlock Fanfare) ---
+    let audioCtx = null;
+    function getAudioContext() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        return audioCtx;
+    }
+
+    function playSwitchToggleSound() {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(600, now);
+        osc.frequency.exponentialRampToValueAtTime(1200, now + 0.08);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.08);
+    }
+
+    function playSuccessChime() {
+        const ctx = getAudioContext();
+        const notes = [440, 554.37, 659.25, 880];
+        notes.forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.1);
+            gain.gain.setValueAtTime(0.25, ctx.currentTime + idx * 0.1);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + idx * 0.1 + 0.3);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(ctx.currentTime + idx * 0.1);
+            osc.stop(ctx.currentTime + idx * 0.1 + 0.3);
+        });
+    }
+
+    function playAlarmBuzzer() {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(140, now);
+        osc.frequency.setValueAtTime(100, now + 0.15);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.3);
+    }
+
+    // --- 2. Voice Guidance Engine ---
+    let currentLang = 'hi';
+    let availableVoices = [];
+
+    function loadVoices() {
+        if ('speechSynthesis' in window) availableVoices = window.speechSynthesis.getVoices();
+    }
+    if ('speechSynthesis' in window) window.speechSynthesis.onvoiceschanged = loadVoices;
+
+    function speakText(text) {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.rate = 0.95;
+        utter.pitch = 1.1;
+
+        if (availableVoices.length === 0) availableVoices = window.speechSynthesis.getVoices();
+
+        if (currentLang === 'hi') {
+            utter.lang = 'hi-IN';
+            const v = availableVoices.find(item => item.lang.includes('hi'));
+            if (v) utter.voice = v;
+        } else {
+            utter.lang = 'en-US';
+            const v = availableVoices.find(item => item.lang.includes('en') && (item.name.includes('Samantha') || item.name.includes('Zira') || item.name.includes('David')));
+            if (v) utter.voice = v;
+        }
+        window.speechSynthesis.speak(utter);
+    }
+
+    // --- 3. LIVE GRAPHICAL TUTORIAL ENGINE ---
+    const demoCanvas = document.getElementById('demoCanvas');
+    const dCtx = demoCanvas.getContext('2d');
+    let demoTime = 0;
+    let demoAnimId = null;
+
+    function runDemoLoop() {
+        dCtx.clearRect(0, 0, demoCanvas.width, demoCanvas.height);
+        demoTime = (demoTime + 1) % 240;
+
+        // Background grid lines
+        dCtx.strokeStyle = "rgba(6, 182, 212, 0.1)";
+        dCtx.lineWidth = 1;
+        for (let x = 0; x < demoCanvas.width; x += 30) {
+            dCtx.beginPath(); dCtx.moveTo(x, 0); dCtx.lineTo(x, demoCanvas.height); dCtx.stroke();
+        }
+
+        // Animated Switch Toggle
+        const isSw1On = demoTime > 60;
+        const isSw2On = demoTime > 120;
+        const gateOut = (isSw1On && isSw2On) ? 1 : 0;
+
+        // Switches
+        drawCyberSwitch(dCtx, 80, 50, isSw1On ? 1 : 0, "A");
+        drawCyberSwitch(dCtx, 80, 130, isSw2On ? 1 : 0, "B");
+
+        // Logic Gate: AND
+        drawLogicGateNode(dCtx, 280, 90, "AND", gateOut);
+
+        // Core Output Chip
+        drawCoreChip(dCtx, 460, 90, gateOut);
+
+        // Wires
+        drawWire(dCtx, 110, 50, 240, 75, isSw1On ? 1 : 0);
+        drawWire(dCtx, 110, 130, 240, 105, isSw2On ? 1 : 0);
+        drawWire(dCtx, 320, 90, 430, 90, gateOut);
+
+        // Pointer
+        let pX = 80, pY = 50;
+        if (demoTime < 60) {
+            pX = 80; pY = 50;
+        } else if (demoTime < 120) {
+            pX = 80; pY = 130;
+        } else {
+            pX = 460; pY = 90;
+        }
+        dCtx.font = "22px sans-serif";
+        dCtx.fillText("👆", pX + 12, pY + 14);
+
+        demoAnimId = requestAnimationFrame(runDemoLoop);
+    }
+
+    function closeTutorial() {
+        getAudioContext();
+        if (demoAnimId) cancelAnimationFrame(demoAnimId);
+        document.getElementById('tutorialModal').classList.add('d-none');
+        startTimer();
+        const hint = (currentLang === 'hi') 
+            ? "लेवल 1: इनपुट स्विच टॉगल करें और कोर चिप को अनलॉक करें!" 
+            : "Level 1: Toggle input switches to supply current to the Core Chip!";
+        speakText(hint);
+    }
+
+    function openTutorial() {
+        getAudioContext();
+        document.getElementById('tutorialModal').classList.remove('d-none');
+        demoTime = 0;
+        runDemoLoop();
+    }
+
+    // --- 4. Circuit Levels Dataset ---
+    const circuitLevels = [
+        {
+            level: 1,
+            switches: [
+                { id: 's1', val: 0, x: 100, y: 120, label: 'SW_1' },
+                { id: 's2', val: 0, x: 100, y: 220, label: 'SW_2' },
+                { id: 's3', val: 0, x: 100, y: 320, label: 'SW_3' }
+            ],
+            gates: [
+                { id: 'g1', type: 'AND', x: 340, y: 170, in1: 's1', in2: 's2' },
+                { id: 'g2', type: 'OR',  x: 580, y: 240, in1: 'g1', in2: 's3' }
+            ],
+            targetGate: 'g2',
+            ruleHi: "नियम: AND गेट के दोनों इनपुट 1 होने चाहिए, और OR गेट में कोई भी 1 चलेगा!",
+            ruleEn: "Rule: AND gate needs both inputs 1. OR gate needs at least one 1."
+        },
+        {
+            level: 2,
+            switches: [
+                { id: 's1', val: 1, x: 100, y: 110, label: 'SW_1' },
+                { id: 's2', val: 0, x: 100, y: 200, label: 'SW_2' },
+                { id: 's3', val: 0, x: 100, y: 310, label: 'SW_3' }
+            ],
+            gates: [
+                { id: 'g1', type: 'NOT', x: 320, y: 110, in1: 's1' },
+                { id: 'g2', type: 'OR',  x: 320, y: 260, in1: 's2', in2: 's3' },
+                { id: 'g3', type: 'AND', x: 580, y: 190, in1: 'g1', in2: 'g2' }
+            ],
+            targetGate: 'g3',
+            ruleHi: "नियम: NOT गेट इनपुट को उल्टा (0 को 1) करता है। टारगेट AND गेट को दोनों 1 चाहिए!",
+            ruleEn: "Rule: NOT gate inverts the signal. Target AND gate requires both 1s."
+        },
+        {
+            level: 3,
+            switches: [
+                { id: 's1', val: 0, x: 100, y: 100, label: 'SW_1' },
+                { id: 's2', val: 1, x: 100, y: 190, label: 'SW_2' },
+                { id: 's3', val: 0, x: 100, y: 280, label: 'SW_3' },
+                { id: 's4', val: 0, x: 100, y: 360, label: 'SW_4' }
+            ],
+            gates: [
+                { id: 'g1', type: 'XOR', x: 330, y: 140, in1: 's1', in2: 's2' },
+                { id: 'g2', type: 'AND', x: 330, y: 320, in1: 's3', in2: 's4' },
+                { id: 'g3', type: 'OR',  x: 580, y: 230, in1: 'g1', in2: 'g2' }
+            ],
+            targetGate: 'g3',
+            ruleHi: "नियम: XOR गेट तभी 1 देता है जब दोनों इनपुट अलग (0 और 1) हों!",
+            ruleEn: "Rule: XOR outputs 1 only when inputs are different (one 0, one 1)."
+        }
+    ];
+
+    let currentLvlIndex = 0;
+    let activeSwitches = [];
+    let timeLeft = 45;
+    let timerInterval = null;
+
+    function initLevel(lvlIdx) {
+        const lvl = circuitLevels[lvlIdx];
+        activeSwitches = JSON.parse(JSON.stringify(lvl.switches));
+        document.getElementById('levelBadge').textContent = `LEVEL: 0${lvlIdx + 1} / 03`;
+        document.getElementById('gateRuleHint').textContent = (currentLang === 'hi') ? lvl.ruleHi : lvl.ruleEn;
+        timeLeft = 45;
+        document.getElementById('timerVal').textContent = `${timeLeft}s`;
+        evaluateCircuit();
+    }
+
+    function startTimer() {
+        if (timerInterval) clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            document.getElementById('timerVal').textContent = `${timeLeft}s`;
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                playAlarmBuzzer();
+                speakText(currentLang === 'hi' ? "समय समाप्त! फायरवॉल रीबूट हो रहा है!" : "Timeout! Firewall rebooting!");
+                initLevel(currentLvlIndex);
+            }
+        }, 1000);
+    }
+
+    // --- 5. Circuit Evaluation Logic ---
+    function evaluateCircuit() {
+        const lvl = circuitLevels[currentLvlIndex];
+        const stateMap = {};
+
+        // 1. Populate switch values
+        activeSwitches.forEach(sw => {
+            stateMap[sw.id] = sw.val;
+        });
+
+        // 2. Compute logic gates
+        lvl.gates.forEach(g => {
+            const val1 = stateMap[g.in1];
+            const val2 = g.in2 ? stateMap[g.in2] : 0;
+
+            let out = 0;
+            if (g.type === 'AND') out = (val1 === 1 && val2 === 1) ? 1 : 0;
+            else if (g.type === 'OR')  out = (val1 === 1 || val2 === 1) ? 1 : 0;
+            else if (g.type === 'NOT') out = (val1 === 1) ? 0 : 1;
+            else if (g.type === 'XOR') out = (val1 !== val2) ? 1 : 0;
+
+            stateMap[g.id] = out;
+        });
+
+        const targetUnlocked = stateMap[lvl.targetGate] === 1;
+
+        const targetStatusEl = document.getElementById('targetStatus');
+        if (targetUnlocked) {
+            targetStatusEl.className = 'hud-pill text-success';
+            targetStatusEl.innerHTML = '<i class="bi bi-unlock-fill"></i> STATUS: SECURED (OUTPUT = 1)';
+            playSuccessChime();
+
+            setTimeout(() => {
+                currentLvlIndex++;
+                if (currentLvlIndex < circuitLevels.length) {
+                    initLevel(currentLvlIndex);
+                    speakText(currentLang === 'hi' ? "लेवल पूरा हुआ! अगला फायरवॉल तैयार!" : "Level secured! Next firewall loaded!");
+                } else {
+                    showFinalVictory();
+                }
+            }, 1200);
+        } else {
+            targetStatusEl.className = 'hud-pill text-danger';
+            targetStatusEl.innerHTML = '<i class="bi bi-lock-fill"></i> STATUS: LOCKED (OUTPUT = 0)';
+        }
+
+        return stateMap;
+    }
+
+    // --- 6. Interaction & Canvas Render ---
+    const canvas = document.getElementById('circuitCanvas');
+    const ctx = canvas.getContext('2d');
+
+    canvas.addEventListener('click', (e) => {
+        getAudioContext();
+        const rect = canvas.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const clickY = e.clientY - rect.top;
+
+        // Check if any switch clicked
+        activeSwitches.forEach(sw => {
+            if (Math.abs(clickX - sw.x) < 32 && Math.abs(clickY - sw.y) < 22) {
+                sw.val = sw.val === 1 ? 0 : 1;
+                playSwitchToggleSound();
+                evaluateCircuit();
+            }
+        });
+    });
+
+    function renderCircuit() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Cyber Grid Lines
+        ctx.strokeStyle = "rgba(6, 182, 212, 0.08)";
+        ctx.lineWidth = 1;
+        for (let x = 0; x < canvas.width; x += 40) {
+            ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+        }
+        for (let y = 0; y < canvas.height; y += 40) {
+            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+        }
+
+        const lvl = circuitLevels[currentLvlIndex];
+        const stateMap = {};
+        activeSwitches.forEach(sw => { stateMap[sw.id] = sw.val; });
+
+        // Calculate intermediate states
+        lvl.gates.forEach(g => {
+            const v1 = stateMap[g.in1];
+            const v2 = g.in2 ? stateMap[g.in2] : 0;
+            let out = 0;
+            if (g.type === 'AND') out = (v1 === 1 && v2 === 1) ? 1 : 0;
+            else if (g.type === 'OR')  out = (v1 === 1 || v2 === 1) ? 1 : 0;
+            else if (g.type === 'NOT') out = (v1 === 1) ? 0 : 1;
+            else if (g.type === 'XOR') out = (v1 !== v2) ? 1 : 0;
+            stateMap[g.id] = out;
+        });
+
+        // 1. Draw Routing Wires
+        lvl.gates.forEach(g => {
+            const inNode1 = activeSwitches.find(s => s.id === g.in1) || lvl.gates.find(item => item.id === g.in1);
+            const inVal1 = stateMap[g.in1];
+            drawWire(ctx, inNode1.x + (inNode1.label ? 30 : 40), inNode1.y, g.x - 40, g.y - (g.in2 ? 14 : 0), inVal1);
+
+            if (g.in2) {
+                const inNode2 = activeSwitches.find(s => s.id === g.in2) || lvl.gates.find(item => item.id === g.in2);
+                const inVal2 = stateMap[g.in2];
+                drawWire(ctx, inNode2.x + (inNode2.label ? 30 : 40), inNode2.y, g.x - 40, g.y + 14, inVal2);
+            }
+        });
+
+        // Wire to Target Core
+        const targetGateObj = lvl.gates.find(g => g.id === lvl.targetGate);
+        const finalSignal = stateMap[lvl.targetGate];
+        drawWire(ctx, targetGateObj.x + 40, targetGateObj.y, 800, 210, finalSignal);
+
+        // 2. Draw Interactive Switches
+        activeSwitches.forEach(sw => {
+            drawCyberSwitch(ctx, sw.x, sw.y, sw.val, sw.label);
+        });
+
+        // 3. Draw Gates
+        lvl.gates.forEach(g => {
+            drawLogicGateNode(ctx, g.x, g.y, g.type, stateMap[g.id]);
+        });
+
+        // 4. Draw Core Vault Chip
+        drawCoreChip(ctx, 830, 210, finalSignal);
+
+        requestAnimationFrame(renderCircuit);
+    }
+
+    // Canvas Graphics Helpers
+    function drawCyberSwitch(c, x, y, val, label) {
+        c.save();
+        c.translate(x, y);
+
+        c.fillStyle = val === 1 ? "#06b6d4" : "#1e293b";
+        c.strokeStyle = val === 1 ? "#67e8f9" : "#475569";
+        c.lineWidth = 2.5;
+        c.beginPath();
+        c.roundRect(-28, -18, 56, 36, 10);
+        c.fill();
+        c.stroke();
+
+        c.fillStyle = val === 1 ? "#020617" : "#94a3b8";
+        c.font = "bold 16px Fira Code";
+        c.textAlign = "center";
+        c.textBaseline = "middle";
+        c.fillText(`[ ${val} ]`, 0, 0);
+
+        c.fillStyle = "#a5f3fc";
+        c.font = "11px Fira Code";
+        c.fillText(label, 0, -26);
+
+        c.restore();
+    }
+
+    function drawLogicGateNode(c, x, y, type, state) {
+        c.save();
+        c.translate(x, y);
+
+        c.fillStyle = "#091b2e";
+        c.strokeStyle = state === 1 ? "#06b6d4" : "#334155";
+        c.lineWidth = 3;
+        if (state === 1) {
+            c.shadowColor = "#06b6d4";
+            c.shadowBlur = 12;
+        }
+
+        c.beginPath();
+        c.roundRect(-38, -26, 76, 52, 12);
+        c.fill();
+        c.stroke();
+
+        c.shadowBlur = 0;
+        c.fillStyle = state === 1 ? "#38bdf8" : "#94a3b8";
+        c.font = "bold 16px Fira Code";
+        c.textAlign = "center";
+        c.textBaseline = "middle";
+        c.fillText(type, 0, 0);
+
+        c.restore();
+    }
+
+    function drawCoreChip(c, x, y, state) {
+        c.save();
+        c.translate(x, y);
+
+        c.fillStyle = state === 1 ? "#064e3b" : "#450a0a";
+        c.strokeStyle = state === 1 ? "#22c55e" : "#ef4444";
+        c.lineWidth = 3;
+        if (state === 1) {
+            c.shadowColor = "#22c55e";
+            c.shadowBlur = 16;
+        }
+
+        c.beginPath();
+        c.roundRect(-35, -35, 70, 70, 16);
+        c.fill();
+        c.stroke();
+
+        c.shadowBlur = 0;
+        c.font = "28px sans-serif";
+        c.textAlign = "center";
+        c.textBaseline = "middle";
+        c.fillText(state === 1 ? "🔓" : "🔒", 0, 0);
+
+        c.fillStyle = state === 1 ? "#86efac" : "#fca5a5";
+        c.font = "bold 11px Fira Code";
+        c.fillText(state === 1 ? "UNLOCKED" : "LOCKED", 0, 48);
+
+        c.restore();
+    }
+
+    function drawWire(c, x1, y1, x2, y2, state) {
+        c.save();
+        c.strokeStyle = state === 1 ? "#06b6d4" : "#1e293b";
+        c.lineWidth = state === 1 ? 4 : 2;
+
+        if (state === 1) {
+            c.shadowColor = "#06b6d4";
+            c.shadowBlur = 8;
+        }
+
+        const midX = (x1 + x2) / 2;
+        c.beginPath();
+        c.moveTo(x1, y1);
+        c.bezierCurveTo(midX, y1, midX, y2, x2, y2);
+        c.stroke();
+        c.restore();
+    }
+
+    // --- 7. Victory & Translations ---
+    function showFinalVictory() {
+        if (timerInterval) clearInterval(timerInterval);
+        document.getElementById('playArea').classList.add('d-none');
+        document.getElementById('victoryArea').classList.remove('d-none');
+        confetti({ particleCount: 160, spread: 90, origin: { y: 0.55 } });
+
+        if (currentLang === 'hi') {
+            document.getElementById('winTitle').textContent = "फायरवॉल सुरक्षित!";
+            document.getElementById('winSubtitle').textContent = "आपने सभी बाइनरी लॉजिक गेट्स को हैक और सिक्योर कर लिया!";
+        } else {
+            document.getElementById('winTitle').textContent = "FIREWALL SECURED!";
+            document.getElementById('winSubtitle').textContent = "You routed binary signals through every logic gate array without breach!";
+        }
+
+        speakText(currentLang === 'hi' 
+            ? "शानदार! आपने सभी साइबर फायरवॉल अनलॉक कर दिए!" 
+            : "Hooray! Cyber security systems fully restored!");
+    }
+
+    function restartMission() {
+        currentLvlIndex = 0;
+        document.getElementById('victoryArea').classList.add('d-none');
+        document.getElementById('playArea').classList.remove('d-none');
+        initLevel(0);
+        startTimer();
+    }
+
+    function toggleLanguage() {
+        currentLang = (currentLang === 'hi') ? 'en' : 'hi';
+        document.getElementById('langBtn').textContent = (currentLang === 'hi') ? "🌐 Switch to English" : "🌐 हिंदी में बदलें";
+        document.getElementById('guideBtnTxt').textContent = (currentLang === 'hi') ? "प्रोटोकॉल गाइड" : "Protocol Guide";
+
+        if (currentLang === 'hi') {
+            document.getElementById('tutHeading').textContent = "सिस्टम प्रोटोकॉल: लॉजिक गेट डिफेंस";
+            document.getElementById('tutSub').textContent = "स्विच (0 या 1) टॉगल करें और कोर चिप में करंट भेजकर अनलॉक करें:";
+            document.getElementById('tutStartBtn').textContent = "टर्मिनल शुरू करें (Got it!)";
+            document.getElementById('demoGuideTxt').textContent = "स्टेप: स्विच [0] पर टैप करके [1] करें ताकि गेट में पावर पहुंचे!";
+        } else {
+            document.getElementById('tutHeading').textContent = "SYSTEM PROTOCOL: LOGIC GATE DEFENSE";
+            document.getElementById('tutSub').textContent = "Switch binary inputs (0 or 1) to transmit active current into the Target Core:";
+            document.getElementById('tutStartBtn').textContent = "INITIALIZE TERMINAL (Got it!)";
+            document.getElementById('demoGuideTxt').textContent = "Step: Click Input Switch [0] to flip to [1] and power the AND Gate!";
+        }
+
+        initLevel(currentLvlIndex);
+    }
+
+    window.onload = () => {
+        loadVoices();
+        initLevel(0);
+        runDemoLoop();
+        requestAnimationFrame(renderCircuit);
+    };
+</script>
+</body>
+</html>

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KidsWorld - My Badges & Achievements</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='28' fill='%23FACC15' stroke='%231E293B' stroke-width='2'/%3E%3Cpath d='M19 26c.5-4 6.5-4 7 0M38 26c.5-4 6.5-4 7 0' stroke='%231E293B' stroke-width='3.5' stroke-linecap='round' fill='none'/%3E%3Ccircle cx='16' cy='33' r='4.5' fill='%23FB7185'/%3E%3Ccircle cx='48' cy='33' r='4.5' fill='%23FB7185'/%3E%3Cpath d='M22 34c0 0 1 12 10 12s10-12 10-12Z' fill='%23881337' stroke='%231E293B' stroke-width='2'/%3E%3Cellipse cx='32' cy='44' rx='6' ry='3.5' fill='%23F43F5E'/%3E%3C/svg%3E">
+
+    <!-- Bootstrap 5.3 & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <script src="./screen-guard.js"></script>
+
+    <style>
+        :root {
+            --bubble-yellow: #ffde59;
+            --primary-blue: #007bff;
+            --accent-orange: #ff914d;
+        }
+
+        body {
+            font-family: 'Fredoka', cursive, sans-serif;
+            background: linear-gradient(180deg, #f0fdf4 0%, #e0f2fe 100%);
+            min-height: 100vh;
+            margin: 0;
+            user-select: none;
+        }
+
+        .brand-avatar-icon {
+            width: 44px;
+            height: 44px;
+            filter: drop-shadow(0 3px 4px rgba(0,0,0,0.15));
+        }
+
+        .kid-btn {
+            border-radius: 20px;
+            border-bottom: 5px solid rgba(0,0,0,0.15) !important;
+            font-weight: 700;
+            transition: all 0.15s ease-in-out;
+        }
+        .kid-btn:active {
+            transform: translateY(3px);
+            border-bottom: 2px solid rgba(0,0,0,0.15) !important;
+        }
+
+        /* Hero Trophy Header */
+        .trophy-banner {
+            background: linear-gradient(135deg, #fef08a 0%, #fed7aa 100%);
+            border-radius: 32px;
+            border: 4px solid #f59e0b;
+            box-shadow: 0 14px 28px rgba(245, 158, 11, 0.15);
+        }
+
+        /* Badge Cards */
+        .badge-card {
+            background: #ffffff;
+            border-radius: 28px;
+            border: 4px solid #e2e8f0;
+            padding: 24px 16px;
+            text-align: center;
+            position: relative;
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 0px rgba(0,0,0,0.06);
+        }
+
+        .badge-card.unlocked {
+            border-color: #facc15;
+            background: #fffdf5;
+            box-shadow: 0 12px 0px #fde047;
+            cursor: pointer;
+        }
+        .badge-card.unlocked:hover {
+            transform: translateY(-8px) scale(1.03);
+        }
+
+        .badge-card.locked {
+            opacity: 0.6;
+            filter: grayscale(85%);
+            cursor: not-allowed;
+            background: #f8fafc;
+        }
+
+        .badge-icon-box {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 14px auto;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3.5rem;
+            box-shadow: inset 0 -4px 6px rgba(0,0,0,0.1);
+        }
+
+        .unlocked .badge-icon-box {
+            animation: softWobble 3s infinite ease-in-out alternate;
+        }
+
+        @keyframes softWobble {
+            0% { transform: rotate(-5deg) scale(1); }
+            100% { transform: rotate(5deg) scale(1.05); }
+        }
+
+        .badge-chip {
+            font-size: 0.8rem;
+            border-radius: 50px;
+            padding: 4px 12px;
+            font-weight: 800;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar bg-white sticky-top py-3 shadow-sm">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="./Home page.html">
+                <svg class="brand-avatar-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="32" cy="32" r="28" fill="#FACC15" stroke="#1E293B" stroke-width="2"/>
+                    <path d="M19 26c.5-4 6.5-4 7 0M38 26c.5-4 6.5-4 7 0" stroke="#1E293B" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+                    <circle cx="16" cy="33" r="4.5" fill="#FB7185"/>
+                    <circle cx="48" cy="33" r="4.5" fill="#FB7185"/>
+                    <path d="M22 34c0 0 1 12 10 12s10-12 10-12Z" fill="#881337" stroke="#1E293B" stroke-width="2"/>
+                    <ellipse cx="32" cy="44" rx="6" ry="3.5" fill="#F43F5E"/>
+                </svg>
+                <span class="fs-2 fw-bold text-primary">Kids<span class="text-warning">World</span></span>
+            </a>
+
+            <div class="d-flex align-items-center gap-3">
+                <a href="./Home page.html" class="btn btn-outline-secondary kid-btn px-3 py-2">
+                    <i class="bi bi-arrow-left me-1"></i> Back to Home
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container py-5">
+        <!-- TOP TROPHY BANNER -->
+        <div class="trophy-banner p-4 p-md-5 mb-5 text-center">
+            <div class="display-3 mb-2">🏆 ⭐ 🎖️</div>
+            <h1 class="display-5 fw-bold text-dark mb-2">Arya's Hall of Fame!</h1>
+            <p class="fs-5 text-muted mb-4">Celebrate your learning milestones and collected quest badges!</p>
+            
+            <div class="d-inline-flex flex-wrap justify-content-center gap-3 bg-white px-4 py-2 rounded-pill shadow-sm">
+                <span class="fw-bold text-dark fs-5">Total Badges: <span class="text-primary" id="unlockedCount">5 / 8 Unlocked</span></span>
+                <span class="text-secondary">|</span>
+                <span class="fw-bold text-dark fs-5">Star Points: <span class="text-warning">⭐ 2,450</span></span>
+            </div>
+        </div>
+
+        <!-- BADGES GRID -->
+        <div class="row g-4" id="badgesContainer">
+            <!-- Badges render dynamically from JavaScript -->
+        </div>
+    </main>
+
+    <script>
+        const badgesData = [
+            {
+                id: 1,
+                title: "Alphabet Master",
+                desc: "Completed letters A to Z match quest!",
+                icon: "🅰️",
+                bgColor: "#e0f2fe",
+                unlocked: true,
+                unlockedDate: "Unlocked on Day 2"
+            },
+            {
+                id: 2,
+                title: "Animal Family Friend",
+                desc: "Reunited all baby animals with their mom!",
+                icon: "🐾",
+                bgColor: "#fce7f3",
+                unlocked: true,
+                unlockedDate: "Unlocked on Day 3"
+            },
+            {
+                id: 3,
+                title: "Fruit Harvester",
+                desc: "Counted and picked all fresh orchard fruits!",
+                icon: "🍎",
+                bgColor: "#dcfce7",
+                unlocked: true,
+                unlockedDate: "Unlocked Today"
+            },
+            {
+                id: 4,
+                title: "Veggie Explorer",
+                desc: "Learned all healthy vegetable names!",
+                icon: "🥦",
+                bgColor: "#fef9c3",
+                unlocked: true,
+                unlockedDate: "Unlocked on Day 4"
+            },
+            {
+                id: 5,
+                title: "Vehicle Pilot",
+                desc: "Explored and learned road vehicles!",
+                icon: "🚗",
+                bgColor: "#ffedd5",
+                unlocked: true,
+                unlockedDate: "Unlocked on Day 5"
+            },
+            {
+                id: 6,
+                title: "Varnamala Champion",
+                desc: "Master Hindi alphabet vocabulary quest.",
+                icon: "🕉️",
+                bgColor: "#ede9fe",
+                unlocked: false,
+                unlockedDate: "Play Age 6-8 Hindi Game to Unlock"
+            },
+            {
+                id: 7,
+                title: "Math Wizard",
+                desc: "Solve 20 quick addition and subtraction sums.",
+                icon: "🔢",
+                bgColor: "#fee2e2",
+                unlocked: false,
+                unlockedDate: "Play Number Calculation to Unlock"
+            },
+            {
+                id: 8,
+                title: "Memory Genius",
+                desc: "Clear Level 5 matrix memory sequence challenge.",
+                icon: "🧠",
+                bgColor: "#f1f5f9",
+                unlocked: false,
+                unlockedDate: "Play Memory & Attention to Unlock"
+            }
+        ];
+
+        function renderBadges() {
+            const container = document.getElementById('badgesContainer');
+            container.innerHTML = '';
+
+            let unlockedTotal = 0;
+
+            badgesData.forEach(badge => {
+                if (badge.unlocked) unlockedTotal++;
+
+                const col = document.createElement('div');
+                col.className = "col-sm-6 col-md-4 col-lg-3";
+
+                col.innerHTML = `
+                    <div class="badge-card ${badge.unlocked ? 'unlocked' : 'locked'}" onclick="${badge.unlocked ? `celebrateBadge('${badge.title}')` : ''}">
+                        <div class="badge-icon-box" style="background-color: ${badge.bgColor};">
+                            ${badge.icon}
+                        </div>
+                        <h4 class="fw-bold text-dark mb-1 fs-5">${badge.title}</h4>
+                        <p class="text-muted small mb-3" style="min-height: 40px;">${badge.desc}</p>
+                        
+                        <span class="badge-chip ${badge.unlocked ? 'bg-success text-white' : 'bg-secondary text-white'}">
+                            ${badge.unlocked ? `<i class="bi bi-patch-check-fill me-1"></i> ${badge.unlockedDate}` : `<i class="bi bi-lock-fill me-1"></i> Locked`}
+                        </span>
+                    </div>
+                `;
+                container.appendChild(col);
+            });
+
+            document.getElementById('unlockedCount').textContent = `${unlockedTotal} / ${badgesData.length} Unlocked`;
+        }
+
+        function celebrateBadge(title) {
+            confetti({
+                particleCount: 70,
+                spread: 60,
+                origin: { y: 0.6 }
+            });
+        }
+
+        renderBadges();
+    </script>
+</body>
+</html>

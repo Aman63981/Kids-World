@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Astro-Trajectory: Gravity Slingshot - KidsWorld</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 6L42 22H22L32 6Z' fill='%2338BDF8'/%3E%3Crect x='22' y='22' width='20' height='26' rx='4' fill='%23E0F2FE'/%3E%3Ccircle cx='32' cy='32' r='5' fill='%230284C7'/%3E%3Cpath d='M20 48L14 58H50L44 48H20Z' fill='%23F59E0B'/%3E%3C/svg%3E">
+
+    <!-- Bootstrap 5.3 & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Code & Tech Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@500;700&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: #020617;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            user-select: none;
+            touch-action: manipulation;
+            overflow-x: hidden;
+            color: #e2e8f0;
+        }
+
+        .flight-wrapper {
+            width: 96%;
+            max-width: 980px;
+            background: rgba(15, 23, 42, 0.96);
+            border-radius: 28px;
+            padding: 22px;
+            box-shadow: 0 0 50px rgba(56, 189, 248, 0.25), inset 0 0 20px rgba(56, 189, 248, 0.06);
+            border: 3px solid #38bdf8;
+            position: relative;
+        }
+
+        .hud-chip {
+            font-family: 'Fira Code', monospace;
+            background: #030712;
+            border: 1px solid #0284c7;
+            padding: 6px 14px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+            color: #38bdf8;
+        }
+
+        /* Flight Simulation Arena */
+        .simulator-box {
+            position: relative;
+            width: 100%;
+            height: 420px;
+            background: radial-gradient(circle at center, #07152b 0%, #020617 100%);
+            border-radius: 22px;
+            border: 2px solid #0369a1;
+            margin-top: 14px;
+            overflow: hidden;
+        }
+
+        #orbitCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Flight Command Bar */
+        .control-strip {
+            background: #030712;
+            border: 2px solid #1e293b;
+            border-radius: 20px;
+            padding: 14px 20px;
+            margin-top: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .slider-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+
+        .cyber-slider {
+            accent-color: #38bdf8;
+            cursor: pointer;
+        }
+
+        .cyber-btn {
+            font-family: 'Fira Code', monospace;
+            border-radius: 12px;
+            padding: 8px 20px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            border: 2px solid #38bdf8;
+            background: rgba(56, 189, 248, 0.15);
+            color: #f0f9ff;
+            cursor: pointer;
+            transition: all 0.15s ease-in-out;
+        }
+        .cyber-btn:hover {
+            background: #38bdf8;
+            color: #020617;
+            box-shadow: 0 0 16px rgba(56, 189, 248, 0.6);
+        }
+        .cyber-btn:active {
+            transform: scale(0.96);
+        }
+
+        /* Tutorial Modal */
+        .tutorial-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(2, 6, 23, 0.95);
+            backdrop-filter: blur(8px);
+            border-radius: 28px;
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .tutorial-box {
+            background: #0b192e;
+            border: 3px solid #38bdf8;
+            border-radius: 24px;
+            padding: 24px;
+            max-width: 680px;
+            width: 100%;
+            box-shadow: 0 0 35px rgba(56, 189, 248, 0.4);
+            text-align: center;
+        }
+
+        .demo-screen {
+            width: 100%;
+            max-width: 580px;
+            height: 190px;
+            margin: 12px auto;
+            border-radius: 16px;
+            border: 2px solid #0369a1;
+            background: #020617;
+        }
+
+        #demoCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<div class="flight-wrapper">
+    <!-- Graphical Tutorial Modal -->
+    <div class="tutorial-overlay" id="tutorialModal">
+        <div class="tutorial-box">
+            <h3 class="fw-bold text-info mb-1" id="tutHeading">FLIGHT PROTOCOL: GRAVITATIONAL SLINGSHOT</h3>
+            <p class="small text-muted mb-2" id="tutSub">Bend your probe's path around the massive planet to sling into the target station orbit:</p>
+
+            <div class="demo-screen">
+                <canvas id="demoCanvas" width="580" height="190"></canvas>
+            </div>
+
+            <div class="mb-3">
+                <span class="hud-chip text-warning" id="demoGuideTxt">
+                    Trajectory Rule: Aim close to the gravity well to curve your velocity towards the target orbit!
+                </span>
+            </div>
+
+            <button class="cyber-btn px-4 py-2 fs-6" onclick="closeTutorial()">
+                <i class="bi bi-rocket-takeoff-fill me-1"></i> <span id="tutStartBtn">INITIALIZE LAUNCH COMPUTER (Got it!)</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Header Status HUD -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="d-flex gap-2">
+            <a href="../Home page.html" class="cyber-btn text-decoration-none">
+                <i class="bi bi-arrow-left me-1"></i> Dashboard
+            </a>
+            <button class="cyber-btn" onclick="openTutorial()">
+                <i class="bi bi-question-diamond me-1"></i> <span id="guideBtnTxt">Flight Guide</span>
+            </button>
+        </div>
+
+        <button class="cyber-btn text-warning border-warning" id="langBtn" onclick="toggleLanguage()">
+            🌐 Switch to English
+        </button>
+
+        <div class="d-flex gap-2">
+            <span class="hud-chip text-warning" id="fuelBadge">
+                ⛽ Fuel: 100%
+            </span>
+            <span class="hud-chip text-success" id="velocityBadge">
+                🚀 Velocity: 0 km/s
+            </span>
+        </div>
+    </div>
+
+    <!-- Simulation Arena -->
+    <div id="playArea">
+        <div class="simulator-box" id="simStage">
+            <canvas id="orbitCanvas" width="920" height="420"></canvas>
+        </div>
+
+        <!-- Trajectory Control Strip -->
+        <div class="control-strip">
+            <div class="slider-wrap">
+                <span class="text-info fw-bold">ANGLE:</span>
+                <input type="range" class="cyber-slider" id="angleSlider" min="-45" max="45" value="0" oninput="updateTrajectoryPreview()">
+                <span class="font-monospace text-warning" id="angleVal">0°</span>
+            </div>
+
+            <div class="slider-wrap">
+                <span class="text-info fw-bold">VELOCITY:</span>
+                <input type="range" class="cyber-slider" id="thrustSlider" min="5" max="15" value="9" step="0.5" oninput="updateTrajectoryPreview()">
+                <span class="font-monospace text-warning" id="thrustVal">9.0 km/s</span>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button class="cyber-btn text-danger border-danger" onclick="resetProbe()">
+                    <i class="bi bi-arrow-counterclockwise"></i> Reset
+                </button>
+                <button class="cyber-btn text-success border-success px-4" id="launchBtn" onclick="launchProbe()">
+                    <i class="bi bi-send-fill me-1"></i> Launch Probe
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Victory Screen -->
+    <div id="victoryArea" class="d-none text-center py-4">
+        <div style="font-size: 5rem;">🪐 🚀 🌌 🎯 🏆</div>
+        <h1 class="display-5 fw-bolder text-info mb-2" id="winTitle">ORBITAL INSERTION ACHIEVED!</h1>
+        <p class="fs-4 text-light mb-3" id="winSubtitle">You executed a textbook gravitational slingshot and locked into target orbit!</p>
+
+        <div class="card p-3 my-3 mx-auto shadow-sm rounded-4 border-0 text-center" style="max-width: 380px; background: #07152b; border: 2px dashed #38bdf8 !important; color: white;">
+            <span class="text-muted fw-bold small">FUEL EFFICIENCY RATING</span>
+            <h1 class="display-4 fw-bold text-success my-1" id="finalFuelScore">92%</h1>
+            <div class="fs-3 text-warning">⭐⭐⭐⭐⭐</div>
+            <span class="badge bg-info text-dark rounded-pill px-3 py-2 mt-2 fs-6">BADGE: ASTROPHYSICS COMMANDER 🛸</span>
+        </div>
+
+        <div class="d-flex justify-content-center gap-3 mt-4">
+            <button class="cyber-btn px-4 py-3 fs-5" onclick="restartSimulation()">
+                <i class="bi bi-arrow-clockwise me-1"></i> New Mission
+            </button>
+            <a href="../Home page.html" class="cyber-btn text-white px-4 py-3 fs-5 text-decoration-none">
+                <i class="bi bi-house-door me-1"></i> Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- 1. Audio Synthesizer Engine ---
+    let audioCtx = null;
+    function getAudioContext() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        return audioCtx;
+    }
+
+    function playThrusterRumble() {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(90, now);
+        osc.frequency.exponentialRampToValueAtTime(40, now + 0.35);
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.35);
+    }
+
+    function playGravityAssistHum() {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.exponentialRampToValueAtTime(660, now + 0.3);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.3);
+    }
+
+    function playCrashSound() {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(120, now);
+        osc.frequency.linearRampToValueAtTime(30, now + 0.4);
+        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.4);
+    }
+
+    function playOrbitCaptureFanfare() {
+        const ctx = getAudioContext();
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.12);
+            gain.gain.setValueAtTime(0.3, ctx.currentTime + idx * 0.12);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + idx * 0.12 + 0.4);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(ctx.currentTime + idx * 0.12);
+            osc.stop(ctx.currentTime + idx * 0.12 + 0.4);
+        });
+    }
+
+    // --- 2. Voice Guidance Engine ---
+    let currentLang = 'hi';
+    let availableVoices = [];
+
+    function loadVoices() {
+        if ('speechSynthesis' in window) availableVoices = window.speechSynthesis.getVoices();
+    }
+    if ('speechSynthesis' in window) window.speechSynthesis.onvoiceschanged = loadVoices;
+
+    function speakText(text) {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.rate = 0.95;
+        utter.pitch = 1.1;
+
+        if (availableVoices.length === 0) availableVoices = window.speechSynthesis.getVoices();
+
+        if (currentLang === 'hi') {
+            utter.lang = 'hi-IN';
+            const v = availableVoices.find(item => item.lang.includes('hi'));
+            if (v) utter.voice = v;
+        } else {
+            utter.lang = 'en-US';
+            const v = availableVoices.find(item => item.lang.includes('en') && (item.name.includes('Samantha') || item.name.includes('Zira') || item.name.includes('David')));
+            if (v) utter.voice = v;
+        }
+        window.speechSynthesis.speak(utter);
+    }
+
+    // --- 3. LIVE GRAPHICAL TUTORIAL ANIMATION ---
+    const demoCanvas = document.getElementById('demoCanvas');
+    const dCtx = demoCanvas.getContext('2d');
+    let demoTime = 0;
+    let demoAnimId = null;
+
+    function runDemoLoop() {
+        dCtx.clearRect(0, 0, demoCanvas.width, demoCanvas.height);
+        demoTime = (demoTime + 1) % 240;
+
+        // Background space stars
+        dCtx.fillStyle = "#ffffff";
+        dCtx.fillRect(80, 40, 2, 2);
+        dCtx.fillRect(350, 140, 2, 2);
+        dCtx.fillRect(500, 30, 2, 2);
+
+        // Planet with Gravity Well
+        const pX = 280, pY = 110, pR = 26;
+        dCtx.strokeStyle = "rgba(56, 189, 248, 0.25)";
+        dCtx.lineWidth = 2;
+        dCtx.beginPath();
+        dCtx.arc(pX, pY, 70, 0, Math.PI * 2);
+        dCtx.stroke();
+
+        dCtx.fillStyle = "#f59e0b";
+        dCtx.beginPath();
+        dCtx.arc(pX, pY, pR, 0, Math.PI * 2);
+        dCtx.fill();
+
+        // Target Orbit
+        const tX = 490, tY = 70;
+        dCtx.strokeStyle = "rgba(34, 197, 94, 0.5)";
+        dCtx.setLineDash([4, 4]);
+        dCtx.beginPath();
+        dCtx.arc(tX, tY, 28, 0, Math.PI * 2);
+        dCtx.stroke();
+        dCtx.setLineDash([]);
+        dCtx.fillStyle = "#22c55e";
+        dCtx.beginPath();
+        dCtx.arc(tX, tY, 8, 0, Math.PI * 2);
+        dCtx.fill();
+
+        // Animated Slingshot Arc
+        dCtx.strokeStyle = "#38bdf8";
+        dCtx.lineWidth = 3;
+        dCtx.beginPath();
+        dCtx.moveTo(50, 150);
+        dCtx.bezierCurveTo(180, 160, 240, 180, 290, 165);
+        dCtx.bezierCurveTo(340, 150, 420, 90, tX, tY);
+        dCtx.stroke();
+
+        // Probe rocket following trajectory
+        let probeT = demoTime / 240;
+        let rX = 50 + (tX - 50) * probeT;
+        let rY = 150 - Math.sin(probeT * Math.PI) * 70;
+
+        dCtx.fillStyle = "#ffffff";
+        dCtx.beginPath();
+        dCtx.arc(rX, rY, 5, 0, Math.PI * 2);
+        dCtx.fill();
+
+        demoAnimId = requestAnimationFrame(runDemoLoop);
+    }
+
+    function closeTutorial() {
+        getAudioContext();
+        if (demoAnimId) cancelAnimationFrame(demoAnimId);
+        document.getElementById('tutorialModal').classList.add('d-none');
+        const hint = (currentLang === 'hi') 
+            ? "लॉन्च कंप्यूटर तैयार! एंगल और थ्रस्ट सेट करके प्रोब लॉन्च करें!" 
+            : "Flight computer ready! Set launch angle and thrust, then fire the probe!";
+        speakText(hint);
+    }
+
+    function openTutorial() {
+        getAudioContext();
+        document.getElementById('tutorialModal').classList.remove('d-none');
+        demoTime = 0;
+        runDemoLoop();
+    }
+
+    // --- 4. Physics Engine & Celestial Setup ---
+    const canvas = document.getElementById('orbitCanvas');
+    const ctx = canvas.getContext('2d');
+
+    // Launch Base Position (Earth Analog)
+    const launchPad = { x: 90, y: 320 };
+
+    // Massive Gravitational Slingshot Planet (e.g. Jupiter/Mars analog)
+    const massivePlanet = { x: 450, y: 220, radius: 46, mass: 6500, color: '#f59e0b' };
+
+    // Destination Orbit Target
+    const targetOrbit = { x: 790, y: 120, radius: 40, captured: false };
+
+    // Probe Flight State
+    let probe = {
+        x: launchPad.x,
+        y: launchPad.y,
+        vx: 0,
+        vy: 0,
+        active: false,
+        trail: [],
+        fuelLeft: 100
+    };
+
+    let launchAngle = 0; // in degrees
+    let launchSpeed = 9.0;
+    let flightAnimationId = null;
+
+    function updateTrajectoryPreview() {
+        launchAngle = parseFloat(document.getElementById('angleSlider').value);
+        launchSpeed = parseFloat(document.getElementById('thrustSlider').value);
+
+        document.getElementById('angleVal').textContent = `${launchAngle > 0 ? '+' : ''}${launchAngle}°`;
+        document.getElementById('thrustVal').textContent = `${launchSpeed.toFixed(1)} km/s`;
+    }
+
+    function launchProbe() {
+        if (probe.active) return;
+        getAudioContext();
+        playThrusterRumble();
+
+        probe.x = launchPad.x;
+        probe.y = launchPad.y;
+        probe.trail = [];
+        probe.active = true;
+        probe.fuelLeft = 100 - (launchSpeed * 2.5);
+
+        // Convert Angle & Speed into 2D velocity vectors
+        const rad = (launchAngle - 35) * (Math.PI / 180);
+        probe.vx = Math.cos(rad) * (launchSpeed * 0.7);
+        probe.vy = Math.sin(rad) * (launchSpeed * 0.7);
+
+        document.getElementById('launchBtn').disabled = true;
+        document.getElementById('fuelBadge').textContent = `⛽ Fuel: ${Math.round(probe.fuelLeft)}%`;
+
+        const launchTxt = (currentLang === 'hi') ? "थ्रस्टर फायर! ट्रैजेक्टरी पर नज़र रखें..." : "Thrusters active! Tracking trajectory...";
+        speakText(launchTxt);
+    }
+
+    function resetProbe() {
+        probe.active = false;
+        probe.x = launchPad.x;
+        probe.y = launchPad.y;
+        probe.vx = 0;
+        probe.vy = 0;
+        probe.trail = [];
+        document.getElementById('launchBtn').disabled = false;
+        document.getElementById('velocityBadge').textContent = `🚀 Velocity: 0 km/s`;
+        document.getElementById('fuelBadge').textContent = `⛽ Fuel: 100%`;
+    }
+
+    // --- 5. Real-Time Gravity Physics Loop ---
+    function updatePhysics() {
+        if (!probe.active) return;
+
+        // Gravitational Force calculation (F = G * M / r^2)
+        const dx = massivePlanet.x - probe.x;
+        const dy = massivePlanet.y - probe.y;
+        const distSq = dx * dx + dy * dy;
+        const dist = Math.sqrt(distSq);
+
+        // Collision with Planet
+        if (dist < massivePlanet.radius + 6) {
+            probe.active = false;
+            playCrashSound();
+            speakText(currentLang === 'hi' ? "क्रैश! ग्रह के बहुत करीब चले गए। एंगल बदलो!" : "Impact detected! Orbit too low, adjust angle!");
+            setTimeout(resetProbe, 1200);
+            return;
+        }
+
+        // Apply gravitational acceleration
+        const force = massivePlanet.mass / Math.max(800, distSq);
+        const ax = force * (dx / dist);
+        const ay = force * (dy / dist);
+
+        probe.vx += ax * 0.05;
+        probe.vy += ay * 0.05;
+
+        probe.x += probe.vx;
+        probe.y += probe.vy;
+
+        // Gravity well sound resonance
+        if (dist < 130 && Math.random() < 0.1) {
+            playGravityAssistHum();
+        }
+
+        probe.trail.push({ x: probe.x, y: probe.y });
+        if (probe.trail.length > 90) probe.trail.shift();
+
+        const currentSpeed = Math.sqrt(probe.vx * probe.vx + probe.vy * probe.vy) * 2.2;
+        document.getElementById('velocityBadge').textContent = `🚀 Velocity: ${currentSpeed.toFixed(1)} km/s`;
+
+        // Check Target Orbit Insertion
+        const targetDx = targetOrbit.x - probe.x;
+        const targetDy = targetOrbit.y - probe.y;
+        const targetDist = Math.sqrt(targetDx * targetDx + targetDy * targetDy);
+
+        if (targetDist < targetOrbit.radius) {
+            probe.active = false;
+            playOrbitCaptureFanfare();
+            setTimeout(showVictory, 400);
+            return;
+        }
+
+        // Out of Bounds Check
+        if (probe.x > canvas.width + 60 || probe.y < -60 || probe.y > canvas.height + 60) {
+            probe.active = false;
+            speakText(currentLang === 'hi' ? "प्रोब अंतरिक्ष में खो गया! दोबारा लॉन्च करें!" : "Probe escaped orbit! Re-align launch vector!");
+            setTimeout(resetProbe, 1200);
+        }
+    }
+
+    // --- 6. Visual Rendering Engine ---
+    function render() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // 1. Celestial Starfield
+        ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+        ctx.fillRect(120, 60, 2, 2);
+        ctx.fillRect(280, 40, 1.5, 1.5);
+        ctx.fillRect(680, 80, 2, 2);
+        ctx.fillRect(840, 360, 1.5, 1.5);
+        ctx.fillRect(400, 370, 2, 2);
+
+        // 2. Massive Planet Gravity Well Contours
+        ctx.strokeStyle = "rgba(56, 189, 248, 0.15)";
+        ctx.lineWidth = 1.5;
+        for (let r = 70; r <= 170; r += 35) {
+            ctx.beginPath();
+            ctx.arc(massivePlanet.x, massivePlanet.y, r, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        // Planet Body
+        ctx.fillStyle = massivePlanet.color;
+        ctx.beginPath();
+        ctx.arc(massivePlanet.x, massivePlanet.y, massivePlanet.radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Planet atmosphere glow
+        ctx.strokeStyle = "rgba(245, 158, 11, 0.4)";
+        ctx.lineWidth = 6;
+        ctx.stroke();
+
+        // 3. Target Orbit Station
+        ctx.strokeStyle = "rgba(34, 197, 94, 0.6)";
+        ctx.lineWidth = 2.5;
+        ctx.setLineDash([6, 6]);
+        ctx.beginPath();
+        ctx.arc(targetOrbit.x, targetOrbit.y, targetOrbit.radius, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Target Core
+        ctx.fillStyle = "#22c55e";
+        ctx.beginPath();
+        ctx.arc(targetOrbit.x, targetOrbit.y, 10, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#86efac";
+        ctx.font = "12px Fira Code";
+        ctx.fillText("TARGET CORE", targetOrbit.x - 38, targetOrbit.y + 26);
+
+        // 4. Launch Station (Base)
+        ctx.fillStyle = "#0284c7";
+        ctx.beginPath();
+        ctx.arc(launchPad.x, launchPad.y, 16, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = "#38bdf8";
+        ctx.font = "12px Fira Code";
+        ctx.fillText("EARTH BASE", launchPad.x - 34, launchPad.y + 32);
+
+        // 5. Projected Trajectory Line (When idle)
+        if (!probe.active) {
+            drawPredictedArc();
+        }
+
+        // 6. Active Probe Flight & Exhaust Trail
+        if (probe.active) {
+            // Trail
+            ctx.strokeStyle = "rgba(56, 189, 248, 0.7)";
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            probe.trail.forEach((p, idx) => {
+                if (idx === 0) ctx.moveTo(p.x, p.y);
+                else ctx.lineTo(p.x, p.y);
+            });
+            ctx.stroke();
+
+            // Probe Sprite
+            ctx.fillStyle = "#f0f9ff";
+            ctx.beginPath();
+            ctx.arc(probe.x, probe.y, 6, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Exhaust plume
+            ctx.fillStyle = "#f59e0b";
+            ctx.beginPath();
+            ctx.arc(probe.x - probe.vx * 1.5, probe.y - probe.vy * 1.5, 4, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        updatePhysics();
+        requestAnimationFrame(render);
+    }
+
+    // Predictive Trajectory Plotter using Step Simulation
+    function drawPredictedArc() {
+        ctx.strokeStyle = "rgba(250, 204, 21, 0.35)";
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 6]);
+        ctx.beginPath();
+
+        let simX = launchPad.x;
+        let simY = launchPad.y;
+        const rad = (launchAngle - 35) * (Math.PI / 180);
+        let simVx = Math.cos(rad) * (launchSpeed * 0.7);
+        let simVy = Math.sin(rad) * (launchSpeed * 0.7);
+
+        ctx.moveTo(simX, simY);
+
+        for (let i = 0; i < 110; i++) {
+            const dx = massivePlanet.x - simX;
+            const dy = massivePlanet.y - simY;
+            const distSq = dx * dx + dy * dy;
+            const dist = Math.sqrt(distSq);
+
+            if (dist < massivePlanet.radius + 4) break;
+
+            const force = massivePlanet.mass / Math.max(800, distSq);
+            simVx += force * (dx / dist) * 0.05;
+            simVy += force * (dy / dist) * 0.05;
+
+            simX += simVx;
+            simY += simVy;
+
+            ctx.lineTo(simX, simY);
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
+    }
+
+    // --- 7. Victory Screen & Translation ---
+    function showVictory() {
+        document.getElementById('playArea').classList.add('d-none');
+        document.getElementById('victoryArea').classList.remove('d-none');
+        confetti({ particleCount: 160, spread: 90, origin: { y: 0.55 } });
+
+        document.getElementById('finalFuelScore').textContent = `${Math.round(probe.fuelLeft)}%`;
+
+        if (currentLang === 'hi') {
+            document.getElementById('winTitle').textContent = "कक्षा में सफल प्रवेश!";
+            document.getElementById('winSubtitle').textContent = "आपने गुरुत्वाकर्षण स्लिंगशॉट का सटीक उपयोग करके प्रोब को टारगेट पर पहुंचा दिया!";
+        } else {
+            document.getElementById('winTitle').textContent = "ORBITAL INSERTION ACHIEVED!";
+            document.getElementById('winSubtitle').textContent = "You executed a textbook gravitational slingshot and locked into target orbit!";
+        }
+
+        const cheer = (currentLang === 'hi')
+            ? "उत्कृष्ट गणना! आपने गुरुत्वाकर्षण सहायता (Gravity Assist) से मिशन पूरा किया!"
+            : "Phenomenal astrodynamics! Orbital insertion 100% verified!";
+        speakText(cheer);
+    }
+
+    function restartSimulation() {
+        document.getElementById('victoryArea').classList.add('d-none');
+        document.getElementById('playArea').classList.remove('d-none');
+        resetProbe();
+    }
+
+    function toggleLanguage() {
+        currentLang = (currentLang === 'hi') ? 'en' : 'hi';
+        document.getElementById('langBtn').textContent = (currentLang === 'hi') ? "🌐 Switch to English" : "🌐 हिंदी में बदलें";
+        document.getElementById('guideBtnTxt').textContent = (currentLang === 'hi') ? "उड़ान गाइड" : "Flight Guide";
+
+        if (currentLang === 'hi') {
+            document.getElementById('tutHeading').textContent = "उड़ान प्रोटोकॉल: गुरुत्वाकर्षण स्लिंगशॉट";
+            document.getElementById('tutSub').textContent = "विशालकाय ग्रह के गुरुत्वाकर्षण का उपयोग करके प्रोब को टारगेट स्टेशन तक मोड़ें:";
+            document.getElementById('tutStartBtn').textContent = "लॉन्च कंप्यूटर शुरू करें (Got it!)";
+            document.getElementById('demoGuideTxt').textContent = "नियम: ग्रह के करीब से गुजरने पर प्रोब को गति और सही दिशा (Slingshot) मिलती है!";
+        } else {
+            document.getElementById('tutHeading').textContent = "FLIGHT PROTOCOL: GRAVITATIONAL SLINGSHOT";
+            document.getElementById('tutSub').textContent = "Bend your probe's path around the massive planet to sling into the target station orbit:";
+            document.getElementById('tutStartBtn').textContent = "INITIALIZE LAUNCH COMPUTER (Got it!)";
+            document.getElementById('demoGuideTxt').textContent = "Trajectory Rule: Aim close to the gravity well to curve your velocity towards the target orbit!";
+        }
+    }
+
+    window.onload = () => {
+        loadVoices();
+        updateTrajectoryPreview();
+        runDemoLoop();
+        requestAnimationFrame(render);
+    };
+</script>
+</body>
+</html>

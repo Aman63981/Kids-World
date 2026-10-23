@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Builder Safari - KidsWorld</title>
+
+    <!-- Favicon: Laughing Kid Face -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='28' fill='%23FACC15' stroke='%231E293B' stroke-width='2'/%3E%3Cpath d='M19 26c.5-4 6.5-4 7 0M38 26c.5-4 6.5-4 7 0' stroke='%231E293B' stroke-width='3.5' stroke-linecap='round' fill='none'/%3E%3Ccircle cx='16' cy='33' r='4.5' fill='%23FB7185'/%3E%3Ccircle cx='48' cy='33' r='4.5' fill='%23FB7185'/%3E%3Cpath d='M22 34c0 0 1 12 10 12s10-12 10-12Z' fill='%23881337' stroke='%231E293B' stroke-width='2'/%3E%3Cellipse cx='32' cy='44' rx='6' ry='3.5' fill='%23F43F5E'/%3E%3C/svg%3E">
+
+    <!-- Bootstrap 5.3 & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Fredoka Kids Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
+    
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Fredoka', cursive, sans-serif;
+            background: linear-gradient(180deg, #dcfce7 0%, #bbf7d0 50%, #86efac 100%);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            user-select: none;
+            touch-action: manipulation;
+            overflow-x: hidden;
+        }
+
+        .game-wrapper {
+            width: 95%;
+            max-width: 900px;
+            background: #ffffff;
+            border-radius: 36px;
+            padding: 24px;
+            box-shadow: 0 20px 45px rgba(0,0,0,0.12);
+            border: 6px solid #16a34a;
+            position: relative;
+        }
+
+        .status-pill {
+            border-radius: 50px;
+            padding: 8px 18px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Safari Stage */
+        .safari-stage {
+            position: relative;
+            width: 100%;
+            background: linear-gradient(180deg, #fef9c3 0%, #ecfccb 60%, #d9f99d 100%);
+            border-radius: 28px;
+            padding: 24px 16px;
+            border: 4px dashed #84cc16;
+            margin-top: 14px;
+            text-align: center;
+        }
+
+        /* Big Safari Animal Showcase */
+        .animal-display {
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            background: #ffffff;
+            border: 5px solid #eab308;
+            border-radius: 30px;
+            padding: 14px 28px;
+            box-shadow: 0 10px 0 rgba(234, 179, 8, 0.25);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+        }
+        .animal-display:hover {
+            transform: scale(1.05);
+        }
+
+        .animal-emoji {
+            font-size: 5rem;
+            line-height: 1;
+            filter: drop-shadow(0 6px 6px rgba(0,0,0,0.15));
+        }
+
+        .animal-hint-text {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #475569;
+            margin-top: 6px;
+        }
+
+        /* Wooden Frame Slot Board */
+        .slots-rack {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin: 26px 0 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .wood-slot {
+            width: 68px;
+            height: 72px;
+            background: #b45309;
+            border: 4px solid #78350f;
+            border-radius: 18px;
+            box-shadow: inset 0 6px 8px rgba(0,0,0,0.35);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #ffffff;
+            cursor: pointer;
+            transition: all 0.15s ease-in-out;
+        }
+        .wood-slot.filled {
+            background: #f59e0b;
+            border-color: #d97706;
+            color: #ffffff;
+            box-shadow: 0 6px 0 rgba(180, 83, 9, 0.4);
+        }
+        .wood-slot.filled:hover {
+            transform: scale(0.96);
+        }
+
+        /* Scrambled Floating Letter Bubbles */
+        .bubbles-rack {
+            display: flex;
+            justify-content: center;
+            gap: 14px;
+            min-height: 80px;
+            align-items: center;
+            flex-wrap: wrap;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.65);
+            border-radius: 24px;
+            border: 2px dashed #a3e635;
+        }
+
+        .letter-bubble {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: #0284c7;
+            border: 4px solid #38bdf8;
+            box-shadow: 0 6px 0 #0369a1;
+            color: #ffffff;
+            font-size: 2rem;
+            font-weight: 700;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.15s ease-in-out;
+            animation: bubbleBob 2.5s ease-in-out infinite alternate;
+        }
+        .letter-bubble:hover {
+            transform: scale(1.15) !important;
+        }
+        .letter-bubble:active {
+            transform: scale(0.92) !important;
+        }
+
+        @keyframes bubbleBob {
+            0% { transform: translateY(-4px); }
+            100% { transform: translateY(4px); }
+        }
+
+        /* Action Buttons */
+        .kid-btn {
+            border-radius: 22px;
+            border-bottom: 5px solid rgba(0,0,0,0.18) !important;
+            font-weight: 700;
+            transition: all 0.15s ease-in-out;
+        }
+        .kid-btn:active {
+            transform: translateY(3px);
+            border-bottom: 2px solid rgba(0,0,0,0.18) !important;
+        }
+
+        .speaker-bubble {
+            background: #f59e0b;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 8px 18px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #b45309;
+        }
+        .speaker-bubble:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #b45309;
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-wrapper">
+    <!-- Top Bar Controls -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <a href="../Home page.html" class="btn btn-outline-secondary kid-btn py-2 px-3">
+            <i class="bi bi-arrow-left me-1"></i> Dashboard
+        </a>
+        
+        <button class="btn btn-warning kid-btn px-3 py-2" id="langBtn" onclick="toggleLanguage()">
+            🌐 Switch to English
+        </button>
+
+        <span class="badge bg-success status-pill" id="scoreBadge">
+            ⭐ 0
+        </span>
+    </div>
+
+    <!-- 1. Active Play Stage -->
+    <div id="playArea">
+        <div class="d-flex justify-content-center align-items-center gap-3 mt-3 text-center">
+            <h2 class="fw-bold text-dark m-0" id="questPrompt">अक्षरों को जोड़कर नाम पूरा करें! 🌿</h2>
+            <button class="speaker-bubble" onclick="speakCurrentWord()">
+                <i class="bi bi-volume-up-fill fs-5"></i>
+            </button>
+        </div>
+
+        <div class="safari-stage">
+            <!-- Animal Preview Card -->
+            <div class="animal-display" onclick="speakCurrentWord()">
+                <div class="animal-emoji" id="animalEmoji">🐅</div>
+                <span class="animal-hint-text" id="animalHint">बाघ (Tiger)</span>
+            </div>
+
+            <!-- Empty Wooden Target Slots -->
+            <div class="slots-rack" id="slotsRack"></div>
+
+            <!-- Floating Scrambled Letter Bubbles -->
+            <div class="bubbles-rack" id="bubblesRack"></div>
+        </div>
+
+        <div class="d-flex justify-content-center gap-3 mt-3">
+            <button class="btn btn-outline-danger kid-btn px-4 py-2" onclick="resetCurrentWord()">
+                <i class="bi bi-arrow-counterclockwise me-1"></i> <span id="resetBtnText">Reset Letters</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 2. Victory Screen -->
+    <div id="victoryArea" class="d-none text-center py-4">
+        <div style="font-size: 5rem;">🦁 🐘 🦒 🏆 ✨</div>
+        <h1 class="display-5 fw-bolder text-success mb-2" id="winTitle">सफारी स्पेलिंग मास्टर!</h1>
+        <p class="fs-4 text-secondary mb-3" id="winSubtitle">आपने सभी जानवरों के सही स्पेलिंग खोज लिए!</p>
+
+        <div class="card p-3 my-3 mx-auto shadow-sm rounded-4 border-0 text-center" style="max-width: 360px; background: #fef08a; border: 3px dashed #f59e0b !important;">
+            <span class="text-muted fw-bold">TOTAL STARS</span>
+            <h1 class="display-4 fw-bold text-dark my-1" id="finalStarsDisplay">⭐ 500</h1>
+            <div class="fs-3 text-warning">⭐⭐⭐⭐⭐</div>
+            <span class="badge bg-success rounded-pill px-3 py-2 mt-2 fs-6">बैज: वर्ड सफारी बिल्डर 📜</span>
+        </div>
+
+        <div class="d-flex justify-content-center gap-3 mt-4">
+            <button class="btn btn-warning kid-btn px-4 py-3 fs-5" onclick="restartGame()">
+                <i class="bi bi-arrow-clockwise me-1"></i> फिर से खेलें
+            </button>
+            <a href="../Home page.html" class="btn btn-primary kid-btn text-white px-4 py-3 fs-5 text-decoration-none">
+                <i class="bi bi-house-door me-1"></i> डैशबोर्ड
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- 1. Audio Synthesizer (Pop, Chime, Animal Roar Fanfare) ---
+    let audioCtx = null;
+    function getAudioContext() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        return audioCtx;
+    }
+
+    function playPopChime(freq = 520) {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now);
+        osc.frequency.exponentialRampToValueAtTime(freq * 1.5, now + 0.1);
+
+        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.1);
+    }
+
+    function playWrongBoing() {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(240, now);
+        osc.frequency.linearRampToValueAtTime(120, now + 0.25);
+
+        gain.gain.setValueAtTime(0.35, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.25);
+    }
+
+    function playWordCompletedFanfare() {
+        const ctx = getAudioContext();
+        const notes = [440, 554.37, 659.25, 880];
+        notes.forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.1);
+            gain.gain.setValueAtTime(0.3, ctx.currentTime + idx * 0.1);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + idx * 0.1 + 0.35);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(ctx.currentTime + idx * 0.1);
+            osc.stop(ctx.currentTime + idx * 0.1 + 0.35);
+        });
+    }
+
+    // --- 2. Voice Guidance Engine ---
+    let currentLang = 'hi';
+    let availableVoices = [];
+
+    function loadVoices() {
+        if ('speechSynthesis' in window) availableVoices = window.speechSynthesis.getVoices();
+    }
+    if ('speechSynthesis' in window) window.speechSynthesis.onvoiceschanged = loadVoices;
+
+    function speakText(text) {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.rate = 0.9;
+        utter.pitch = 1.3;
+
+        if (availableVoices.length === 0) availableVoices = window.speechSynthesis.getVoices();
+
+        if (currentLang === 'hi') {
+            utter.lang = 'hi-IN';
+            const v = availableVoices.find(item => item.lang.includes('hi'));
+            if (v) utter.voice = v;
+        } else {
+            utter.lang = 'en-US';
+            const v = availableVoices.find(item => item.lang.includes('en') && (item.name.includes('Samantha') || item.name.includes('Zira') || item.name.includes('Female')));
+            if (v) utter.voice = v;
+        }
+        window.speechSynthesis.speak(utter);
+    }
+
+    // --- 3. Word Safari Dataset ---
+    const safariAnimals = [
+        { word: 'LION', emoji: '🦁', nameHi: 'शेर', nameEn: 'Lion' },
+        { word: 'TIGER', emoji: '🐅', nameHi: 'बाघ', nameEn: 'Tiger' },
+        { word: 'ZEBRA', emoji: '🦓', nameHi: 'ज़ेबरा', nameEn: 'Zebra' },
+        { word: 'MONKEY', emoji: '🐒', nameHi: 'बंदर', nameEn: 'Monkey' },
+        { word: 'PANDA', emoji: '🐼', nameHi: 'पांडा', nameEn: 'Panda' }
+    ];
+
+    let currentAnimalIndex = 0;
+    let placedLetters = [];
+    let availableLetterBubbles = [];
+    let score = 0;
+
+    function loadWord(index) {
+        const item = safariAnimals[index];
+        document.getElementById('animalEmoji').textContent = item.emoji;
+        document.getElementById('animalHint').textContent = (currentLang === 'hi') 
+            ? `${item.nameHi} (${item.nameEn})` 
+            : `${item.nameEn} (${item.nameHi})`;
+
+        placedLetters = new Array(item.word.length).fill(null);
+
+        // Scramble letters
+        availableLetterBubbles = item.word.split('').map((char, i) => ({ id: `${char}_${i}`, char: char }));
+        availableLetterBubbles.sort(() => 0.5 - Math.random());
+
+        renderSlots();
+        renderBubbles();
+
+        setTimeout(() => speakCurrentWord(), 400);
+    }
+
+    function renderSlots() {
+        const rack = document.getElementById('slotsRack');
+        rack.innerHTML = '';
+
+        placedLetters.forEach((char, slotIndex) => {
+            const slot = document.createElement('div');
+            slot.className = `wood-slot ${char ? 'filled' : ''}`;
+            slot.textContent = char ? char : '';
+
+            // Tap filled slot to remove letter
+            if (char) {
+                slot.onclick = () => removeLetterFromSlot(slotIndex);
+            }
+            rack.appendChild(slot);
+        });
+    }
+
+    function renderBubbles() {
+        const rack = document.getElementById('bubblesRack');
+        rack.innerHTML = '';
+
+        availableLetterBubbles.forEach(b => {
+            const bubble = document.createElement('div');
+            bubble.className = 'letter-bubble';
+            bubble.textContent = b.char;
+            bubble.onclick = () => onLetterBubbleTap(b);
+            rack.appendChild(bubble);
+        });
+    }
+
+    function onLetterBubbleTap(bubbleObj) {
+        getAudioContext();
+
+        // Find first empty slot
+        const emptyIndex = placedLetters.findIndex(slot => slot === null);
+        if (emptyIndex === -1) return;
+
+        playPopChime(450 + emptyIndex * 80);
+        speakText(bubbleObj.char); // Speak phonics letter
+
+        placedLetters[emptyIndex] = bubbleObj.char;
+        availableLetterBubbles = availableLetterBubbles.filter(b => b.id !== bubbleObj.id);
+
+        renderSlots();
+        renderBubbles();
+
+        // Check if all slots filled
+        if (!placedLetters.includes(null)) {
+            verifyCompleteSpelling();
+        }
+    }
+
+    function removeLetterFromSlot(slotIndex) {
+        getAudioContext();
+        const removedChar = placedLetters[slotIndex];
+        if (!removedChar) return;
+
+        playPopChime(350);
+
+        placedLetters[slotIndex] = null;
+        availableLetterBubbles.push({ id: `${removedChar}_${Date.now()}`, char: removedChar });
+
+        renderSlots();
+        renderBubbles();
+    }
+
+    function resetCurrentWord() {
+        loadWord(currentAnimalIndex);
+    }
+
+    function verifyCompleteSpelling() {
+        const currentItem = safariAnimals[currentAnimalIndex];
+        const formedWord = placedLetters.join('');
+
+        if (formedWord === currentItem.word) {
+            // Correct Spelling!
+            playWordCompletedFanfare();
+            confetti({ particleCount: 100, spread: 70, origin: { y: 0.65 } });
+
+            score += 100;
+            document.getElementById('scoreBadge').textContent = `⭐ ${score}`;
+
+            const cheer = (currentLang === 'hi') 
+                ? `शाबाश! ${currentItem.nameHi}! ${currentItem.word} बिल्कुल सही स्पेलिंग है!` 
+                : `Awesome! ${currentItem.nameEn}! ${currentItem.word} is spelled correctly!`;
+            speakText(cheer);
+
+            setTimeout(() => {
+                currentAnimalIndex++;
+                if (currentAnimalIndex < safariAnimals.length) {
+                    loadWord(currentAnimalIndex);
+                } else {
+                    showVictory();
+                }
+            }, 1800);
+
+        } else {
+            // Wrong spelling
+            playWrongBoing();
+            const rack = document.getElementById('slotsRack');
+            rack.style.animation = 'shakeRack 0.4s';
+            setTimeout(() => rack.style.animation = '', 400);
+
+            const oops = (currentLang === 'hi') 
+                ? "स्पेलिंग सही नहीं है, अक्षरों को फिर से सेट करें!" 
+                : "Oops, spelling doesn't match! Try rearranging!";
+            speakText(oops);
+        }
+    }
+
+    function speakCurrentWord() {
+        const currentItem = safariAnimals[currentAnimalIndex];
+        const text = (currentLang === 'hi') 
+            ? `${currentItem.nameHi}, यानी ${currentItem.nameEn}. स्पेलिंग बनाओ!` 
+            : `Can you spell ${currentItem.nameEn}?`;
+        speakText(text);
+    }
+
+    function toggleLanguage() {
+        currentLang = (currentLang === 'hi') ? 'en' : 'hi';
+        document.getElementById('langBtn').textContent = (currentLang === 'hi') ? "🌐 Switch to English" : "🌐 हिंदी में बदलें";
+        document.getElementById('questPrompt').textContent = (currentLang === 'hi') 
+            ? "अक्षरों को जोड़कर नाम पूरा करें! 🌿" 
+            : "Connect letters to complete the animal name! 🌿";
+        document.getElementById('resetBtnText').textContent = (currentLang === 'hi') ? "अक्षर रीसेट करें" : "Reset Letters";
+        loadWord(currentAnimalIndex);
+    }
+
+    function showVictory() {
+        document.getElementById('playArea').classList.add('d-none');
+        document.getElementById('victoryArea').classList.remove('d-none');
+        document.getElementById('finalStarsDisplay').textContent = `⭐ ${score}`;
+
+        if (currentLang === 'hi') {
+            document.getElementById('winTitle').textContent = "सफारी स्पेलिंग मास्टर!";
+            document.getElementById('winSubtitle').textContent = "आपने सभी जानवरों के सही स्पेलिंग खोज लिए!";
+        } else {
+            document.getElementById('winTitle').textContent = "Safari Word Master!";
+            document.getElementById('winSubtitle').textContent = "You spelled all the safari animal names correctly!";
+        }
+
+        playWordCompletedFanfare();
+        confetti({ particleCount: 160, spread: 90, origin: { y: 0.55 } });
+
+        setTimeout(() => {
+            const cheer = (currentLang === 'hi') 
+                ? "हुर्रे! आपने वर्ड सफारी पूरी कर ली!" 
+                : "Hooray! You completed the Word Safari Quest!";
+            speakText(cheer);
+        }, 500);
+    }
+
+    function restartGame() {
+        score = 0;
+        currentAnimalIndex = 0;
+        document.getElementById('scoreBadge').textContent = '⭐ 0';
+        document.getElementById('victoryArea').classList.add('d-none');
+        document.getElementById('playArea').classList.remove('d-none');
+        loadWord(0);
+    }
+
+    window.onload = () => {
+        loadVoices();
+        loadWord(0);
+    };
+</script>
+</body>
+</html>

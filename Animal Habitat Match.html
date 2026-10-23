@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animal Habitat Match - KidsWorld</title>
+
+    <!-- Favicon: Laughing Kid Face -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='28' fill='%23FACC15' stroke='%231E293B' stroke-width='2'/%3E%3Cpath d='M19 26c.5-4 6.5-4 7 0M38 26c.5-4 6.5-4 7 0' stroke='%231E293B' stroke-width='3.5' stroke-linecap='round' fill='none'/%3E%3Ccircle cx='16' cy='33' r='4.5' fill='%23FB7185'/%3E%3Ccircle cx='48' cy='33' r='4.5' fill='%23FB7185'/%3E%3Cpath d='M22 34c0 0 1 12 10 12s10-12 10-12Z' fill='%23881337' stroke='%231E293B' stroke-width='2'/%3E%3Cellipse cx='32' cy='44' rx='6' ry='3.5' fill='%23F43F5E'/%3E%3C/svg%3E">
+
+    <!-- Bootstrap 5.3 & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Fredoka Kids Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
+    
+    <!-- Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Fredoka', cursive, sans-serif;
+            background: linear-gradient(180deg, #bae6fd 0%, #bbf7d0 100%);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            user-select: none;
+            touch-action: manipulation;
+            overflow: hidden;
+        }
+
+        .game-wrapper {
+            width: 95%;
+            max-width: 900px;
+            background: #ffffff;
+            border-radius: 36px;
+            padding: 24px;
+            box-shadow: 0 20px 45px rgba(0,0,0,0.12);
+            border: 6px solid #22c55e;
+            position: relative;
+        }
+
+        .badge-pill-custom {
+            border-radius: 50px;
+            padding: 8px 18px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Dual Habitat Stage */
+        .stage-container {
+            position: relative;
+            width: 100%;
+            height: 480px;
+            border-radius: 28px;
+            overflow: hidden;
+            display: flex;
+            border: 4px dashed #86efac;
+            margin-top: 15px;
+        }
+
+        /* Water Habitat Zone (Left) */
+        .habitat-zone {
+            flex: 1;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding-top: 25px;
+            cursor: pointer;
+            transition: all 0.25s ease-in-out;
+        }
+
+        .zone-water {
+            background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
+            border-right: 4px dashed rgba(255, 255, 255, 0.4);
+        }
+        .zone-water:hover {
+            background: linear-gradient(180deg, #7dd3fc 0%, #0369a1 100%);
+        }
+
+        /* Jungle Habitat Zone (Right) */
+        .zone-jungle {
+            background: linear-gradient(180deg, #4ade80 0%, #15803d 100%);
+        }
+        .zone-jungle:hover {
+            background: linear-gradient(180deg, #86efac 0%, #166534 100%);
+        }
+
+        .zone-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 0 3px 6px rgba(0,0,0,0.3);
+            background: rgba(0, 0, 0, 0.2);
+            padding: 6px 20px;
+            border-radius: 30px;
+            pointer-events: none;
+        }
+
+        /* Center Animal Card */
+        .animal-showcase {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 150px;
+            height: 150px;
+            background: #ffffff;
+            border-radius: 35px;
+            border: 5px solid #facc15;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.25);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            transition: transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: grab;
+        }
+
+        .animal-emoji {
+            font-size: 4.5rem;
+            line-height: 1;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.15));
+        }
+
+        .animal-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-top: 4px;
+        }
+
+        /* Directional Zone Arrows */
+        .action-arrow {
+            position: absolute;
+            bottom: 30px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #ffffff;
+            background: rgba(0, 0, 0, 0.25);
+            padding: 8px 18px;
+            border-radius: 50px;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: pulseHint 1.5s infinite;
+        }
+
+        @keyframes pulseHint {
+            0%, 100% { transform: scale(1); opacity: 0.9; }
+            50% { transform: scale(1.08); opacity: 1; }
+        }
+
+        /* Splash & Bubble Particles */
+        .splash-bubble {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.75);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: bubbleRise 0.8s ease-out forwards;
+        }
+        @keyframes bubbleRise {
+            0% { transform: translateY(0) scale(0.4); opacity: 1; }
+            100% { transform: translateY(-70px) scale(1.3); opacity: 0; }
+        }
+
+        /* Jungle Leaf Swing */
+        .swing-happy {
+            animation: happySwing 0.7s ease-in-out infinite alternate;
+        }
+        @keyframes happySwing {
+            0% { transform: translate(-50%, -50%) rotate(-18deg) scale(1.1); }
+            100% { transform: translate(-50%, -50%) rotate(18deg) scale(1.1); }
+        }
+
+        /* Wrong Answer Shake */
+        .wrong-shake {
+            animation: shakeAnimal 0.4s ease-in-out;
+        }
+        @keyframes shakeAnimal {
+            0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+            20% { transform: translate(-65%, -50%) rotate(-10deg); }
+            40% { transform: translate(-35%, -50%) rotate(10deg); }
+            60% { transform: translate(-60%, -50%) rotate(-6deg); }
+            80% { transform: translate(-40%, -50%) rotate(6deg); }
+        }
+
+        /* Buttons */
+        .kid-btn {
+            border-radius: 22px;
+            border-bottom: 5px solid rgba(0,0,0,0.18) !important;
+            font-weight: 700;
+            transition: all 0.15s ease-in-out;
+        }
+        .kid-btn:active {
+            transform: translateY(3px);
+            border-bottom: 2px solid rgba(0,0,0,0.18) !important;
+        }
+
+        .speaker-bubble {
+            background: #f59e0b;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 8px 18px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #b45309;
+        }
+        .speaker-bubble:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #b45309;
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-wrapper">
+    <!-- Header Controls -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <a href="../Home page.html" class="btn btn-outline-secondary kid-btn py-2 px-3">
+            <i class="bi bi-arrow-left me-1"></i> Dashboard
+        </a>
+        <button class="btn btn-warning kid-btn px-3 py-2" id="langBtn" onclick="toggleLanguage()">
+            🌐 Switch to English
+        </button>
+        <span class="badge bg-success badge-pill-custom" id="scoreBadge">
+            🐾 0 / 6
+        </span>
+    </div>
+
+    <!-- Active Stage -->
+    <div id="playArea">
+        <div class="d-flex justify-content-center align-items-center gap-3 mt-3 text-center">
+            <h2 class="fw-bold text-dark m-0" id="questPrompt">जानवर को उसके सही घर भेजें! 🏡</h2>
+            <button class="speaker-bubble" onclick="replayQuestVoice()">
+                <i class="bi bi-volume-up-fill fs-5"></i>
+            </button>
+        </div>
+
+        <div class="stage-container" id="stageContainer">
+            <!-- Habitat 1: Water (Left) -->
+            <div class="habitat-zone zone-water" onclick="selectHabitat('water')">
+                <span class="zone-title">🌊 Water / पानी</span>
+                <span class="action-arrow">
+                    <i class="bi bi-arrow-left-circle-fill fs-4"></i> Tap Here
+                </span>
+            </div>
+
+            <!-- Central Active Animal Card -->
+            <div class="animal-showcase" id="animalCard">
+                <div class="animal-emoji" id="animalEmoji">🐠</div>
+                <div class="animal-name" id="animalName">मछली (Fish)</div>
+            </div>
+
+            <!-- Habitat 2: Jungle (Right) -->
+            <div class="habitat-zone zone-jungle" onclick="selectHabitat('jungle')">
+                <span class="zone-title">🌴 Jungle / जंगल</span>
+                <span class="action-arrow">
+                    Tap Here <i class="bi bi-arrow-right-circle-fill fs-4"></i>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Victory Screen -->
+    <div id="victoryArea" class="d-none text-center py-4">
+        <div style="font-size: 5rem;">🌍 🐒 🐬 🏆 🎉</div>
+        <h1 class="display-5 fw-bolder text-success mb-2" id="winTitle">शानदार खोजकर्ता!</h1>
+        <p class="fs-4 text-secondary mb-3" id="winSubtitle">आपने सभी प्यारे जानवरों को उनके सुरक्षित घर पहुंचा दिया!</p>
+
+        <div class="card p-3 my-3 mx-auto shadow-sm rounded-4 border-0 text-center" style="max-width: 360px; background: #fef08a; border: 3px dashed #f59e0b !important;">
+            <span class="text-muted fw-bold">TOTAL SCORE</span>
+            <h1 class="display-4 fw-bold text-dark my-1">⭐ 600</h1>
+            <div class="fs-3 text-warning">⭐⭐⭐⭐⭐</div>
+            <span class="badge bg-success rounded-pill px-3 py-2 mt-2 fs-6">बैज: वाइल्डलाइफ हीरो 🦁</span>
+        </div>
+
+        <div class="d-flex justify-content-center gap-3 mt-4">
+            <button class="btn btn-warning kid-btn px-4 py-3 fs-5" onclick="restartQuest()">
+                <i class="bi bi-arrow-clockwise me-1"></i> फिर से खेलें
+            </button>
+            <a href="../Home page.html" class="btn btn-primary kid-btn text-white px-4 py-3 fs-5 text-decoration-none">
+                <i class="bi bi-house-door me-1"></i> डैशबोर्ड
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- 1. Audio Synthesizer Engine (Water Splash, Leaf Rustle, Fanfare) ---
+    let audioCtx = null;
+    function getAudioContext() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        return audioCtx;
+    }
+
+    // Splash Audio Synthesis (Water)
+    function playWaterSplash() {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        
+        // Bubbling chirp
+        for (let i = 0; i < 3; i++) {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(300 + i * 180, now + i * 0.08);
+            osc.frequency.exponentialRampToValueAtTime(700 + i * 150, now + i * 0.08 + 0.12);
+            gain.gain.setValueAtTime(0.35, now + i * 0.08);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.08 + 0.12);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + i * 0.08);
+            osc.stop(now + i * 0.08 + 0.12);
+        }
+    }
+
+    // Jungle Chirp / Rustle Sound
+    function playJungleJoy() {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        [440, 587, 659, 880].forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.07);
+            gain.gain.setValueAtTime(0.3, now + idx * 0.07);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.07 + 0.18);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + idx * 0.07);
+            osc.stop(now + idx * 0.07 + 0.18);
+        });
+    }
+
+    // Wrong Boing
+    function playWrongBoing() {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.linearRampToValueAtTime(110, now + 0.25);
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.25);
+    }
+
+    // Victory Fanfare
+    function playFanfare() {
+        const ctx = getAudioContext();
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.12);
+            gain.gain.setValueAtTime(0.3, ctx.currentTime + idx * 0.12);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + idx * 0.12 + 0.4);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(ctx.currentTime + idx * 0.12);
+            osc.stop(ctx.currentTime + idx * 0.12 + 0.4);
+        });
+    }
+
+    // --- 2. Voice Guidance Engine ---
+    let currentLang = 'hi';
+    let availableVoices = [];
+
+    function loadVoices() {
+        if ('speechSynthesis' in window) {
+            availableVoices = window.speechSynthesis.getVoices();
+        }
+    }
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+
+    function speakText(text) {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.rate = 0.88;
+        utter.pitch = 1.3;
+
+        if (availableVoices.length === 0) availableVoices = window.speechSynthesis.getVoices();
+
+        if (currentLang === 'hi') {
+            utter.lang = 'hi-IN';
+            const v = availableVoices.find(item => item.lang.includes('hi'));
+            if (v) utter.voice = v;
+        } else {
+            utter.lang = 'en-US';
+            const v = availableVoices.find(item => item.lang.includes('en') && (item.name.includes('Samantha') || item.name.includes('Zira') || item.name.includes('Female')));
+            if (v) utter.voice = v;
+        }
+        window.speechSynthesis.speak(utter);
+    }
+
+    // --- 3. Animals & Habitat Dataset ---
+    const animalsList = [
+        { id: 'fish', emoji: '🐠', nameHi: 'मछली', nameEn: 'Fish', habitat: 'water' },
+        { id: 'monkey', emoji: '🐒', nameHi: 'बंदर', nameEn: 'Monkey', habitat: 'jungle' },
+        { id: 'dolphin', emoji: '🐬', nameHi: 'डॉल्फ़िन', nameEn: 'Dolphin', habitat: 'water' },
+        { id: 'tiger', emoji: '🐅', nameHi: 'बाघ', nameEn: 'Tiger', habitat: 'jungle' },
+        { id: 'octopus', emoji: '🐙', nameHi: 'ऑक्टोपस', nameEn: 'Octopus', habitat: 'water' },
+        { id: 'parrot', emoji: '🦜', nameHi: 'तोता', nameEn: 'Parrot', habitat: 'jungle' }
+    ];
+
+    let currentIndex = 0;
+    let isProcessing = false;
+
+    // --- 4. Game Setup & Mechanics ---
+    function loadAnimal(index) {
+        isProcessing = false;
+        const animal = animalsList[index];
+        const card = document.getElementById('animalCard');
+        
+        // Reset card styling
+        card.style.transition = 'none';
+        card.style.transform = 'translate(-50%, -50%) scale(1)';
+        card.classList.remove('swing-happy', 'wrong-shake');
+
+        document.getElementById('animalEmoji').textContent = animal.emoji;
+        document.getElementById('animalName').textContent = (currentLang === 'hi') 
+            ? animal.nameHi 
+            : animal.nameEn;
+
+        document.getElementById('scoreBadge').textContent = `🐾 ${index} / ${animalsList.length}`;
+
+        setTimeout(() => {
+            card.style.transition = 'transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            replayQuestVoice();
+        }, 150);
+    }
+
+    function selectHabitat(chosenHabitat) {
+        if (isProcessing) return;
+        getAudioContext();
+
+        const currentAnimal = animalsList[currentIndex];
+        const card = document.getElementById('animalCard');
+
+        if (chosenHabitat === currentAnimal.habitat) {
+            // Correct Choice
+            isProcessing = true;
+
+            if (chosenHabitat === 'water') {
+                playWaterSplash();
+                createWaterBubbles();
+                card.style.transform = 'translate(-140%, -50%) scale(0.9)'; // Slide to Water
+                const cheer = (currentLang === 'hi') 
+                    ? `सही! ${currentAnimal.nameHi} पानी में तैरती है!` 
+                    : `Correct! ${currentAnimal.nameEn} swims in water!`;
+                speakText(cheer);
+            } else {
+                playJungleJoy();
+                card.style.transform = 'translate(40%, -50%) scale(0.9)'; // Slide to Jungle
+                card.classList.add('swing-happy');
+                const cheer = (currentLang === 'hi') 
+                    ? `शाबाश! ${currentAnimal.nameHi} जंगल में रहता है!` 
+                    : `Awesome! ${currentAnimal.nameEn} lives in the jungle!`;
+                speakText(cheer);
+            }
+
+            setTimeout(() => {
+                currentIndex++;
+                if (currentIndex < animalsList.length) {
+                    loadAnimal(currentIndex);
+                } else {
+                    showVictory();
+                }
+            }, 1600);
+
+        } else {
+            // Wrong Choice
+            playWrongBoing();
+            card.classList.add('wrong-shake');
+            setTimeout(() => card.classList.remove('wrong-shake'), 450);
+
+            const hint = (currentLang === 'hi')
+                ? `अरे नहीं! ${currentAnimal.nameHi} यहाँ नहीं रहता। फिर से सोचो!`
+                : `Oops! ${currentAnimal.nameEn} doesn't live here. Try again!`;
+            speakText(hint);
+        }
+    }
+
+    function createWaterBubbles() {
+        const stage = document.getElementById('stageContainer');
+        for (let i = 0; i < 15; i++) {
+            const b = document.createElement('div');
+            b.className = 'splash-bubble';
+            b.style.width = `${Math.random() * 20 + 10}px`;
+            b.style.height = b.style.width;
+            b.style.left = `${Math.random() * 35 + 5}%`;
+            b.style.top = `${Math.random() * 40 + 40}%`;
+            stage.appendChild(b);
+            setTimeout(() => b.remove(), 800);
+        }
+    }
+
+    function replayQuestVoice() {
+        const currentAnimal = animalsList[currentIndex];
+        const questText = (currentLang === 'hi')
+            ? `${currentAnimal.nameHi} कहाँ रहता है? पानी में या जंगल में?`
+            : `Where does the ${currentAnimal.nameEn} live? Water or Jungle?`;
+        speakText(questText);
+    }
+
+    function toggleLanguage() {
+        currentLang = (currentLang === 'hi') ? 'en' : 'hi';
+        const currentAnimal = animalsList[currentIndex];
+        document.getElementById('animalName').textContent = (currentLang === 'hi') ? currentAnimal.nameHi : currentAnimal.nameEn;
+        document.getElementById('langBtn').textContent = (currentLang === 'hi') ? "🌐 Switch to English" : "🌐 हिंदी में बदलें";
+        replayQuestVoice();
+    }
+
+    function showVictory() {
+        document.getElementById('playArea').classList.add('d-none');
+        document.getElementById('victoryArea').classList.remove('d-none');
+
+        if (currentLang === 'hi') {
+            document.getElementById('winTitle').textContent = "शानदार खोजकर्ता!";
+            document.getElementById('winSubtitle').textContent = "आपने सभी प्यारे जानवरों को उनके सुरक्षित घर पहुंचा दिया!";
+        } else {
+            document.getElementById('winTitle').textContent = "Habitat Explorer!";
+            document.getElementById('winSubtitle').textContent = "You guided all animals back to their natural homes!";
+        }
+
+        playFanfare();
+        confetti({ particleCount: 150, spread: 90, origin: { y: 0.55 } });
+
+        setTimeout(() => {
+            const cheer = (currentLang === 'hi')
+                ? "हुर्रे! आपने हैबिटैट मैच पूरा कर लिया!"
+                : "Hooray! You completed the Habitat Match Quest!";
+            speakText(cheer);
+        }, 500);
+    }
+
+    function restartQuest() {
+        currentIndex = 0;
+        document.getElementById('victoryArea').classList.add('d-none');
+        document.getElementById('playArea').classList.remove('d-none');
+        loadAnimal(0);
+    }
+
+    window.onload = () => {
+        loadVoices();
+        loadAnimal(0);
+    };
+</script>
+</body>
+</html>

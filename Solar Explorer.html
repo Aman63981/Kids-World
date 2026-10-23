@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solar Explorer: Orbit Match - KidsWorld</title>
+
+    <!-- Favicon: Laughing Kid Face -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='28' fill='%23FACC15' stroke='%231E293B' stroke-width='2'/%3E%3Cpath d='M19 26c.5-4 6.5-4 7 0M38 26c.5-4 6.5-4 7 0' stroke='%231E293B' stroke-width='3.5' stroke-linecap='round' fill='none'/%3E%3Ccircle cx='16' cy='33' r='4.5' fill='%23FB7185'/%3E%3Ccircle cx='48' cy='33' r='4.5' fill='%23FB7185'/%3E%3Cpath d='M22 34c0 0 1 12 10 12s10-12 10-12Z' fill='%23881337' stroke='%231E293B' stroke-width='2'/%3E%3Cellipse cx='32' cy='44' rx='6' ry='3.5' fill='%23F43F5E'/%3E%3C/svg%3E">
+
+    <!-- Bootstrap 5.3 & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Fredoka Kids Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
+    
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Fredoka', cursive, sans-serif;
+            background: radial-gradient(circle at center, #1e1b4b 0%, #0f172a 100%);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            user-select: none;
+            touch-action: manipulation;
+            overflow-x: hidden;
+            color: #ffffff;
+        }
+
+        .game-wrapper {
+            width: 95%;
+            max-width: 920px;
+            background: rgba(15, 23, 42, 0.92);
+            border-radius: 36px;
+            padding: 24px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            border: 6px solid #6366f1;
+            position: relative;
+        }
+
+        .status-pill {
+            border-radius: 50px;
+            padding: 8px 18px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Space Orbit Stage */
+        .space-stage {
+            position: relative;
+            width: 100%;
+            height: 480px;
+            background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
+            border-radius: 28px;
+            border: 4px dashed #4f46e5;
+            margin-top: 14px;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Orbit Concentric Rings (Pointer-events none taaki click block na ho) */
+        .orbit-ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px dashed rgba(165, 180, 252, 0.35);
+            pointer-events: none;
+        }
+
+        .ring-1 { width: 150px; height: 150px; }
+        .ring-2 { width: 240px; height: 240px; }
+        .ring-3 { width: 330px; height: 330px; }
+        .ring-4 { width: 420px; height: 420px; }
+
+        /* Glowing Center Sun */
+        .sun-node {
+            position: absolute;
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #fde047 30%, #ea580c 100%);
+            box-shadow: 0 0 35px #f59e0b, 0 0 70px rgba(234, 88, 12, 0.5);
+            z-index: 5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.8rem;
+            cursor: pointer;
+        }
+
+        /* Clickable Dedicated Target Slots */
+        .orbit-slot {
+            position: absolute;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            border: 3px dashed #facc15;
+            background: rgba(30, 41, 59, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            z-index: 25; /* High z-index to guarantee click */
+            pointer-events: auto;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 10px rgba(250, 204, 21, 0.3);
+        }
+        .orbit-slot:hover {
+            transform: scale(1.18);
+            border-color: #38bdf8;
+            background: rgba(56, 189, 248, 0.2);
+            box-shadow: 0 0 18px rgba(56, 189, 248, 0.6);
+        }
+        .orbit-slot.occupied {
+            border: 3px solid #22c55e;
+            background: rgba(34, 197, 94, 0.2);
+            box-shadow: 0 0 16px rgba(34, 197, 94, 0.7);
+            cursor: default;
+        }
+
+        /* Distinct Positions on Each Ring (No overlap) */
+        /* Center is (430, 240) in relative calc */
+        #slot1 { top: calc(50% - 75px - 26px); left: calc(50% - 26px); } /* Top on Ring 1 (radius 75px) */
+        #slot2 { top: calc(50% - 120px - 26px); left: calc(50% - 26px); } /* Top on Ring 2 (radius 120px) */
+        #slot3 { top: calc(50% - 165px - 26px); left: calc(50% - 26px); } /* Top on Ring 3 (radius 165px) */
+        #slot4 { top: calc(50% - 210px - 26px); left: calc(50% - 26px); } /* Top on Ring 4 (radius 210px) */
+
+        .slot-badge {
+            position: absolute;
+            bottom: -8px;
+            right: -8px;
+            background: #6366f1;
+            color: #ffffff;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid #ffffff;
+        }
+
+        /* Planets Dock at Bottom */
+        .planets-dock {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-top: 18px;
+            flex-wrap: wrap;
+            padding: 12px;
+            background: rgba(30, 41, 59, 0.85);
+            border-radius: 26px;
+            border: 2px solid #475569;
+        }
+
+        .planet-card {
+            background: #1e293b;
+            border: 3px solid #64748b;
+            border-radius: 20px;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            color: #ffffff;
+            box-shadow: 0 6px 0 rgba(0,0,0,0.3);
+        }
+        .planet-card:hover {
+            transform: scale(1.08);
+            border-color: #facc15;
+        }
+        .planet-card.selected {
+            border-color: #facc15;
+            background: #334155;
+            box-shadow: 0 0 18px rgba(250, 204, 21, 0.6);
+            transform: scale(1.1);
+        }
+        .planet-card.docked {
+            opacity: 0.3;
+            pointer-events: none;
+            filter: grayscale(0.8);
+        }
+
+        .planet-icon {
+            font-size: 2.2rem;
+            line-height: 1;
+        }
+
+        /* Fact Display Banner */
+        .fact-banner {
+            margin-top: 12px;
+            background: rgba(99, 102, 241, 0.2);
+            border: 2px solid #6366f1;
+            border-radius: 20px;
+            padding: 10px 20px;
+            font-size: 1.15rem;
+            min-height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            color: #fef08a;
+            text-align: center;
+        }
+
+        .kid-btn {
+            border-radius: 22px;
+            border-bottom: 5px solid rgba(0,0,0,0.18) !important;
+            font-weight: 700;
+            transition: all 0.15s ease-in-out;
+        }
+        .kid-btn:active {
+            transform: translateY(3px);
+            border-bottom: 2px solid rgba(0,0,0,0.18) !important;
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-wrapper">
+    <!-- Top Bar -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <a href="../Home page.html" class="btn btn-outline-light kid-btn py-2 px-3">
+            <i class="bi bi-arrow-left me-1"></i> Dashboard
+        </a>
+        
+        <button class="btn btn-warning kid-btn px-3 py-2" id="langBtn" onclick="toggleLanguage()">
+            🌐 Switch to English
+        </button>
+
+        <span class="badge bg-primary status-pill" id="scoreBadge">
+            🪐 0 / 4
+        </span>
+    </div>
+
+    <!-- Active Play Area -->
+    <div id="playArea">
+        <div class="text-center mt-3">
+            <h2 class="fw-bold m-0" id="questPrompt">ग्रहों को सूरज से दूरी के सही क्रम में रखें! 🚀</h2>
+        </div>
+
+        <!-- Space Orbit Arena -->
+        <div class="space-stage" id="spaceStage">
+            <!-- Center Sun -->
+            <div class="sun-node" onclick="speakSunInfo()">☀️</div>
+
+            <!-- Concentric Visual Orbit Lines -->
+            <div class="orbit-ring ring-1"></div>
+            <div class="orbit-ring ring-2"></div>
+            <div class="orbit-ring ring-3"></div>
+            <div class="orbit-ring ring-4"></div>
+
+            <!-- Clickable Independent Target Slots for Each Orbit -->
+            <div class="orbit-slot" id="slot1" onclick="tryPlacePlanet(1)">
+                <span class="slot-badge">1</span>
+            </div>
+            <div class="orbit-slot" id="slot2" onclick="tryPlacePlanet(2)">
+                <span class="slot-badge">2</span>
+            </div>
+            <div class="orbit-slot" id="slot3" onclick="tryPlacePlanet(3)">
+                <span class="slot-badge">3</span>
+            </div>
+            <div class="orbit-slot" id="slot4" onclick="tryPlacePlanet(4)">
+                <span class="slot-badge">4</span>
+            </div>
+        </div>
+
+        <!-- Fact Banner -->
+        <div class="fact-banner" id="factBanner">
+            <i class="bi bi-stars fs-4"></i>
+            <span id="factText">नीचे से किसी भी ग्रह को चुनें, फिर उसकी नंबर वाली कक्षा पर क्लिक करें!</span>
+        </div>
+
+        <!-- Planets Selection Dock -->
+        <div class="planets-dock" id="planetsDock"></div>
+    </div>
+
+    <!-- Victory Screen -->
+    <div id="victoryArea" class="d-none text-center py-4">
+        <div style="font-size: 5rem;">🚀 🪐 🌟 🏆 ✨</div>
+        <h1 class="display-5 fw-bolder text-warning mb-2" id="winTitle">अंतरिक्ष वैज्ञानिक!</h1>
+        <p class="fs-4 text-light mb-3" id="winSubtitle">आपने सभी ग्रहों को उनके सही सौर क्रम में स्थापित कर दिया!</p>
+
+        <div class="card p-3 my-3 mx-auto shadow-sm rounded-4 border-0 text-center" style="max-width: 360px; background: #312e81; border: 3px dashed #818cf8 !important; color: white;">
+            <span class="text-muted fw-bold">COSMIC SCORE</span>
+            <h1 class="display-4 fw-bold text-warning my-1" id="finalStarsDisplay">⭐ 400</h1>
+            <div class="fs-3 text-warning">⭐⭐⭐⭐⭐</div>
+            <span class="badge bg-success rounded-pill px-3 py-2 mt-2 fs-6">बैज: सोलर सिस्टम मास्टर 🪐</span>
+        </div>
+
+        <div class="d-flex justify-content-center gap-3 mt-4">
+            <button class="btn btn-warning kid-btn px-4 py-3 fs-5" onclick="restartGame()">
+                <i class="bi bi-arrow-clockwise me-1"></i> फिर से खेलें
+            </button>
+            <a href="../Home page.html" class="btn btn-primary kid-btn text-white px-4 py-3 fs-5 text-decoration-none">
+                <i class="bi bi-house-door me-1"></i> डैशबोर्ड
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- 1. Sound Synthesis Engine ---
+    let audioCtx = null;
+    function getAudioContext() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        return audioCtx;
+    }
+
+    function playCosmicChime(freq = 580) {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, now);
+        osc.frequency.exponentialRampToValueAtTime(freq * 1.6, now + 0.18);
+
+        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.25);
+    }
+
+    function playWrongSound() {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.linearRampToValueAtTime(110, now + 0.25);
+
+        gain.gain.setValueAtTime(0.35, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.25);
+    }
+
+    function playFanfareSound() {
+        const ctx = getAudioContext();
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.12);
+            gain.gain.setValueAtTime(0.3, ctx.currentTime + idx * 0.12);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + idx * 0.12 + 0.35);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(ctx.currentTime + idx * 0.12);
+            osc.stop(ctx.currentTime + idx * 0.12 + 0.35);
+        });
+    }
+
+    // --- 2. Voice Guidance Engine ---
+    let currentLang = 'hi';
+    let availableVoices = [];
+
+    function loadVoices() {
+        if ('speechSynthesis' in window) availableVoices = window.speechSynthesis.getVoices();
+    }
+    if ('speechSynthesis' in window) window.speechSynthesis.onvoiceschanged = loadVoices;
+
+    function speakText(text) {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.rate = 0.92;
+        utter.pitch = 1.3;
+
+        if (availableVoices.length === 0) availableVoices = window.speechSynthesis.getVoices();
+
+        if (currentLang === 'hi') {
+            utter.lang = 'hi-IN';
+            const v = availableVoices.find(item => item.lang.includes('hi'));
+            if (v) utter.voice = v;
+        } else {
+            utter.lang = 'en-US';
+            const v = availableVoices.find(item => item.lang.includes('en') && (item.name.includes('Samantha') || item.name.includes('Zira') || item.name.includes('Female')));
+            if (v) utter.voice = v;
+        }
+        window.speechSynthesis.speak(utter);
+    }
+
+    // --- 3. Planetary Dataset ---
+    const planetsData = [
+        {
+            order: 1,
+            id: 'mercury',
+            emoji: '⚪',
+            nameHi: 'बुध (Mercury)',
+            nameEn: 'Mercury',
+            factHi: 'बुध सूरज का सबसे करीबी ग्रह है (कक्षा 1)!',
+            factEn: 'Mercury is the closest planet to the Sun (Orbit 1)!'
+        },
+        {
+            order: 2,
+            id: 'venus',
+            emoji: '🟡',
+            nameHi: 'शुक्र (Venus)',
+            nameEn: 'Venus',
+            factHi: 'शुक्र दूसरे नंबर का सबसे गर्म ग्रह है (कक्षा 2)!',
+            factEn: 'Venus is the 2nd and hottest planet (Orbit 2)!'
+        },
+        {
+            order: 3,
+            id: 'earth',
+            emoji: '🌍',
+            nameHi: 'पृथ्वी (Earth)',
+            nameEn: 'Earth',
+            factHi: 'पृथ्वी हमारा तीसरा ग्रह है जहाँ जीवन है (कक्षा 3)!',
+            factEn: 'Earth is our home on the 3rd orbit with life!'
+        },
+        {
+            order: 4,
+            id: 'mars',
+            emoji: '🔴',
+            nameHi: 'मंगल (Mars)',
+            nameEn: 'Mars',
+            factHi: 'मंगल चौथा लाल ग्रह है (कक्षा 4)!',
+            factEn: 'Mars is the 4th red planet (Orbit 4)!'
+        }
+    ];
+
+    let selectedPlanet = null;
+    let placedPlanetsCount = 0;
+    let score = 0;
+
+    function initStage() {
+        selectedPlanet = null;
+        placedPlanetsCount = 0;
+        score = 0;
+        document.getElementById('scoreBadge').textContent = `🪐 0 / 4`;
+
+        for (let i = 1; i <= 4; i++) {
+            const slot = document.getElementById(`slot${i}`);
+            slot.innerHTML = `<span class="slot-badge">${i}</span>`;
+            slot.classList.remove('occupied');
+        }
+
+        const dock = document.getElementById('planetsDock');
+        dock.innerHTML = '';
+
+        const shuffled = [...planetsData].sort(() => 0.5 - Math.random());
+        shuffled.forEach(planet => {
+            const card = document.createElement('div');
+            card.className = 'planet-card';
+            card.id = `card_${planet.id}`;
+            card.innerHTML = `
+                <span class="planet-icon">${planet.emoji}</span>
+                <span class="fw-bold">${(currentLang === 'hi') ? planet.nameHi : planet.nameEn}</span>
+            `;
+            card.onclick = () => onSelectPlanet(card, planet);
+            dock.appendChild(card);
+        });
+
+        const initialGuide = (currentLang === 'hi')
+            ? "नीचे से किसी भी ग्रह को चुनें, फिर उसकी नंबर वाली कक्षा पर क्लिक करें!"
+            : "Select a planet below, then tap its numbered orbit slot!";
+        setFactText(initialGuide);
+    }
+
+    function onSelectPlanet(card, planet) {
+        getAudioContext();
+        if (card.classList.contains('docked')) return;
+
+        document.querySelectorAll('.planet-card').forEach(c => c.classList.remove('selected'));
+        selectedPlanet = planet;
+        card.classList.add('selected');
+
+        playCosmicChime(420);
+        
+        const fact = (currentLang === 'hi') ? planet.factHi : planet.factEn;
+        setFactText(fact);
+        speakText(fact);
+    }
+
+    function tryPlacePlanet(slotOrder) {
+        getAudioContext();
+
+        if (!selectedPlanet) {
+            const hint = (currentLang === 'hi') 
+                ? "पहले नीचे से किसी ग्रह को चुनें!" 
+                : "Select a planet from below first!";
+            setFactText(hint);
+            speakText(hint);
+            return;
+        }
+
+        const targetSlot = document.getElementById(`slot${slotOrder}`);
+        if (targetSlot.classList.contains('occupied')) {
+            const occupiedHint = (currentLang === 'hi') 
+                ? "इस कक्षा में पहले से ग्रह मौजूद है!" 
+                : "This orbit slot already has a planet!";
+            setFactText(occupiedHint);
+            speakText(occupiedHint);
+            return;
+        }
+
+        if (selectedPlanet.order === slotOrder) {
+            // Correct Slot!
+            playCosmicChime(640);
+            targetSlot.innerHTML = `
+                <span style="font-size: 2.2rem; line-height: 1;">${selectedPlanet.emoji}</span>
+                <span class="slot-badge" style="background:#22c55e;">✓</span>
+            `;
+            targetSlot.classList.add('occupied');
+
+            const card = document.getElementById(`card_${selectedPlanet.id}`);
+            if (card) {
+                card.classList.remove('selected');
+                card.classList.add('docked');
+            }
+
+            placedPlanetsCount++;
+            score += 100;
+            document.getElementById('scoreBadge').textContent = `🪐 ${placedPlanetsCount} / 4`;
+
+            const successMsg = (currentLang === 'hi') 
+                ? `शानदार! ${selectedPlanet.nameHi} कक्षा ${slotOrder} में सही बैठा!` 
+                : `Awesome! ${selectedPlanet.nameEn} fits in Orbit ${slotOrder}!`;
+            setFactText(successMsg);
+            speakText(successMsg);
+
+            selectedPlanet = null;
+
+            if (placedPlanetsCount === 4) {
+                setTimeout(showVictory, 1400);
+            }
+
+        } else {
+            // Wrong Orbit
+            playWrongSound();
+            targetSlot.style.borderColor = '#ef4444';
+            setTimeout(() => { 
+                if (!targetSlot.classList.contains('occupied')) targetSlot.style.borderColor = '#facc15'; 
+            }, 500);
+
+            const wrongMsg = (currentLang === 'hi') 
+                ? `यह कक्षा ${slotOrder} है। ${selectedPlanet.nameHi} यहाँ नहीं आता!` 
+                : `This is Orbit ${slotOrder}. ${selectedPlanet.nameEn} belongs elsewhere!`;
+            setFactText(wrongMsg);
+            speakText(wrongMsg);
+        }
+    }
+
+    function setFactText(text) {
+        document.getElementById('factText').textContent = text;
+    }
+
+    function speakSunInfo() {
+        const sunFact = (currentLang === 'hi') 
+            ? "सूरज हमारे सौर मंडल का केंद्र है, जो सभी ग्रहों को रोशनी और गर्मी देता है!" 
+            : "The Sun is the center of our Solar System, giving light and heat to all planets!";
+        setFactText(sunFact);
+        speakText(sunFact);
+    }
+
+    function toggleLanguage() {
+        currentLang = (currentLang === 'hi') ? 'en' : 'hi';
+        document.getElementById('langBtn').textContent = (currentLang === 'hi') ? "🌐 Switch to English" : "🌐 हिंदी में बदलें";
+        document.getElementById('questPrompt').textContent = (currentLang === 'hi') 
+            ? "ग्रहों को सूरज से दूरी के सही क्रम में रखें! 🚀" 
+            : "Match planets to their correct orbit order from the Sun! 🚀";
+        initStage();
+    }
+
+    function showVictory() {
+        document.getElementById('playArea').classList.add('d-none');
+        document.getElementById('victoryArea').classList.remove('d-none');
+        document.getElementById('finalStarsDisplay').textContent = `⭐ ${score}`;
+
+        if (currentLang === 'hi') {
+            document.getElementById('winTitle').textContent = "अंतरिक्ष वैज्ञानिक!";
+            document.getElementById('winSubtitle').textContent = "आपने सभी 4 ग्रहों को उनके सही सौर क्रम में स्थापित कर दिया!";
+        } else {
+            document.getElementById('winTitle').textContent = "Solar System Champion!";
+            document.getElementById('winSubtitle').textContent = "You placed all 4 planets in their correct orbital order!";
+        }
+
+        playFanfareSound();
+        confetti({ particleCount: 160, spread: 90, origin: { y: 0.55 } });
+
+        setTimeout(() => {
+            const cheer = (currentLang === 'hi') 
+                ? "हुर्रे! आपने सोलर एक्सप्लोरर क्वेस्ट पूरा कर लिया!" 
+                : "Hooray! You completed the Solar Explorer Quest!";
+            speakText(cheer);
+        }, 500);
+    }
+
+    function restartGame() {
+        document.getElementById('victoryArea').classList.add('d-none');
+        document.getElementById('playArea').classList.remove('d-none');
+        initStage();
+    }
+
+    window.onload = () => {
+        loadVoices();
+        initStage();
+    };
+</script>
+</body>
+</html>

@@ -1,0 +1,791 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>KidsWorld - Parent Dashboard</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='28' fill='%23FACC15' stroke='%231E293B' stroke-width='2'/%3E%3Cpath d='M19 26c.5-4 6.5-4 7 0M38 26c.5-4 6.5-4 7 0' stroke='%231E293B' stroke-width='3.5' stroke-linecap='round' fill='none'/%3E%3Ccircle cx='16' cy='33' r='4.5' fill='%23FB7185'/%3E%3Ccircle cx='48' cy='33' r='4.5' fill='%23FB7185'/%3E%3Cpath d='M22 34c0 0 1 12 10 12s10-12 10-12Z' fill='%23881337' stroke='%231E293B' stroke-width='2'/%3E%3Cellipse cx='32' cy='44' rx='6' ry='3.5' fill='%23F43F5E'/%3E%3C/svg%3E">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Quicksand:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Quicksand", sans-serif;
+      }
+      h1,
+      h2,
+      h3,
+      h4,
+      .brand-font {
+        font-family: "Fredoka", cursive;
+      }
+      .brand-avatar-icon {
+        width: 38px;
+        height: 38px;
+        display: inline-block;
+        vertical-align: middle;
+        filter: drop-shadow(0 2px 4px rgba(0,0,0,0.12));
+        transition: transform 0.2s ease-in-out;
+      }
+      .brand-avatar-icon:hover {
+        transform: rotate(-8deg) scale(1.1);
+      }
+      .toast-enter {
+        transform: translateY(100%);
+        opacity: 0;
+      }
+      .toast-show {
+        transform: translateY(0);
+        opacity: 1;
+      }
+
+      /* Standardized KidsWorld Footer Styles */
+      .kids-footer {
+        font-family: 'Nunito', sans-serif;
+        background: linear-gradient(180deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+        padding: 40px 24px 20px 24px;
+        border-top-left-radius: 36px;
+        border-top-right-radius: 36px;
+        margin-top: 50px;
+        color: var(--text-dark);
+        width: 100%;
+        box-sizing: border-box;
+      }
+      .kids-footer .footer-container {
+        max-width: 1150px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr 1.5fr;
+        gap: 32px;
+      }
+      .kids-footer .footer-brand .logo {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-family: 'Fredoka', cursive;
+        font-size: 2rem;
+        font-weight: 700;
+        color: #0088ff;
+        text-decoration: none;
+        margin-bottom: 12px;
+      }
+      .kids-footer .footer-brand .logo .highlight {
+        color: #ffaa00;
+      }
+      .kids-footer .footer-brand p {
+        font-size: 0.95rem;
+        line-height: 1.5;
+        color: #556575;
+        margin-bottom: 20px;
+        font-weight: 600;
+      }
+      .kids-footer .footer-column h4 {
+        font-family: 'Fredoka', cursive;
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: var(--text-dark);
+        margin-bottom: 16px;
+      }
+      .kids-footer .footer-column ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .kids-footer .footer-column ul li {
+        margin-bottom: 10px;
+      }
+      .kids-footer .footer-column ul li a {
+        text-decoration: none;
+        color: #556575;
+        font-weight: 700;
+        font-size: 0.9rem;
+        transition: all 0.2s ease;
+        display: inline-block;
+      }
+      .kids-footer .footer-column ul li a:hover {
+        color: var(--primary-blue);
+        transform: translateX(4px);
+      }
+      .kids-footer .age-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .kids-footer .footer-age-pill {
+        background: #ffffff;
+        padding: 6px 14px;
+        border-radius: 30px;
+        font-family: 'Fredoka', cursive;
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #2c3e50;
+        border: 2px solid #e1f0fa;
+        text-decoration: none;
+        transition: 0.2s;
+        display: inline-block;
+      }
+      .kids-footer .footer-age-pill:hover {
+        border-color: var(--accent-orange);
+        background-color: #fff9f2;
+      }
+      .kids-footer .social-links {
+        display: flex;
+        gap: 12px;
+        margin-top: 16px;
+      }
+      .kids-footer .social-links a {
+        width: 38px;
+        height: 38px;
+        background-color: #ffffff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary-blue);
+        font-size: 1rem;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.04);
+        transition: transform 0.2s, background-color 0.2s;
+        text-decoration: none;
+      }
+      .kids-footer .social-links a:hover {
+        transform: translateY(-3px);
+        background-color: var(--accent-orange);
+        color: white;
+      }
+      .kids-footer .footer-bottom {
+        max-width: 1150px;
+        margin: 32px auto 0 auto;
+        padding-top: 20px;
+        border-top: 2px dashed #cbe5f5;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        font-size: 0.85rem;
+        font-weight: 800;
+        color: #7a8b99;
+      }
+      .kids-footer .footer-bottom p {
+        margin: 0;
+      }
+      .kids-footer .footer-bottom-links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+      .kids-footer .footer-bottom-links a {
+        color: #7a8b99;
+        text-decoration: none;
+      }
+      .kids-footer .footer-bottom-links a:hover {
+        text-decoration: underline;
+        color: var(--primary-blue);
+      }
+      @media (max-width: 900px) {
+        .kids-footer .footer-container {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      @media (max-width: 600px) {
+        .kids-footer .footer-container {
+          grid-template-columns: 1fr;
+        }
+        .kids-footer .footer-bottom {
+          flex-direction: column;
+          text-align: center;
+        }
+      }
+    </style>
+  </head>
+  <body
+    class="bg-gradient-to-b from-sky-50 via-teal-50 to-emerald-50 min-h-screen text-slate-800 relative flex flex-col justify-between"
+  >
+    <!-- Toast Container for Interactive Notifications -->
+    <div
+      id="toast-container"
+      class="fixed bottom-5 right-5 z-50 flex flex-col gap-2"
+    ></div>
+
+    <!-- HEADER / NAVBAR -->
+    <header
+      class="bg-white/90 backdrop-blur-md border-b border-sky-100 sticky top-0 z-40 px-4 md:px-8 py-3 flex items-center justify-between shadow-sm"
+    >
+      <div class="flex items-center gap-3">
+        <!-- Back Button -->
+        <a href="./Home page.html">
+          <button
+            id="btn-back"
+            class="bg-slate-100 hover:bg-slate-200 text-slate-700 w-10 h-10 rounded-2xl flex items-center justify-center transition shadow-sm font-bold"
+            title="Back to Kids App"
+          >
+            <i class="fa-solid fa-arrow-left"></i>
+          </button>
+        </a>
+
+        <!-- KidsWorld Brand Logo with Smiling Kid Face SVG -->
+        <a href="./Home page.html" class="flex items-center gap-2 cursor-pointer no-underline">
+          <svg class="brand-avatar-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="32" cy="32" r="28" fill="#FACC15" stroke="#1E293B" stroke-width="2"/>
+            <path d="M19 26c.5-4 6.5-4 7 0M38 26c.5-4 6.5-4 7 0" stroke="#1E293B" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+            <circle cx="16" cy="33" r="4.5" fill="#FB7185"/>
+            <circle cx="48" cy="33" r="4.5" fill="#FB7185"/>
+            <path d="M22 34c0 0 1 12 10 12s10-12 10-12Z" fill="#881337" stroke="#1E293B" stroke-width="2"/>
+            <ellipse cx="32" cy="44" rx="6" ry="3.5" fill="#F43F5E"/>
+          </svg>
+          <span class="brand-font text-2xl font-bold tracking-wide text-sky-500"
+            >Kids<span class="text-amber-400">World</span></span
+          >
+        </a>
+      </div>
+
+      <!-- Right Controls Header -->
+      <div class="flex items-center gap-3">
+        <!-- Play Time Timer Badge -->
+        <div
+          class="border-2 border-dashed border-orange-400 bg-orange-50/80 px-4 py-1.5 rounded-full flex items-center gap-2 text-xs md:text-sm font-bold text-orange-600 shadow-sm"
+        >
+          <i class="fa-regular fa-clock text-base"></i>
+          <span
+            >Play Time:
+            <span id="timer-display" class="font-extrabold">14:51</span></span
+          >
+        </div>
+
+        <!-- User Profile Badge -->
+        <div
+          class="bg-amber-400 text-amber-950 font-bold px-3 py-1.5 rounded-full flex items-center gap-2 text-xs md:text-sm shadow-md border-2 border-amber-300"
+        >
+          <div
+            class="w-7 h-7 rounded-full bg-slate-900 text-cyan-400 flex items-center justify-center text-xs border border-white"
+          >
+            <i class="fa-solid fa-robot"></i>
+          </div>
+          <span id="child-name-display" class="brand-font text-sm">Arya</span>
+          <span
+            class="bg-rose-500 text-white text-[11px] px-2 py-0.5 rounded-full flex items-center gap-1 font-extrabold shadow-inner"
+          >
+            🔥 <span id="streak-count">5</span>
+          </span>
+        </div>
+
+        <!-- Portal Exit Button -->
+        <a href="Home page.html">
+          <button
+            id="btn-portal-toggle"
+            class="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs px-4 py-2.5 rounded-2xl transition shadow-md flex items-center gap-2"
+          >
+            <i class="fa-solid fa-user-shield"></i>
+            <span>Exit Dashboard</span>
+          </button>
+        </a>
+      </div>
+    </header>
+
+    <!-- =================================================== -->
+    <!-- PARENT DASHBOARD VIEW                               -->
+    <!-- =================================================== -->
+    <main class="max-w-6xl mx-auto px-4 py-8 space-y-8 flex-grow w-full">
+      <!-- Dashboard Header Banner -->
+      <div
+        class="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 rounded-3xl p-6 md:p-8 text-white shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-6"
+      >
+        <div>
+          <div class="flex items-center gap-2 mb-2">
+            <span
+              class="bg-white/20 px-3 py-1 rounded-full text-xs font-extrabold text-amber-300 uppercase tracking-wider"
+              >Parent Control Hub</span
+            >
+          </div>
+          <h1 class="brand-font text-3xl font-bold">Welcome, Priya! 👋</h1>
+          <p class="text-xs md:text-sm text-indigo-100 font-medium mt-1">
+            Managing learning activity & controls for
+            <span class="font-extrabold underline text-amber-300"
+              >Arya (Age 7)</span
+            >
+          </p>
+        </div>
+
+        <!-- Action Area: Metrics & LOGOUT BUTTON -->
+        <div
+          class="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto"
+        >
+          <div class="grid grid-cols-2 gap-3 w-full sm:w-auto">
+            <div
+              class="bg-white/10 backdrop-blur-md px-4 py-3 rounded-2xl border border-white/20 text-center"
+            >
+              <p
+                class="brand-font text-2xl font-black text-amber-300"
+                id="dash-streak"
+              >
+                5 Days
+              </p>
+              <p class="text-[10px] text-indigo-200 font-extrabold uppercase">
+                Streak
+              </p>
+            </div>
+            <div
+              class="bg-white/10 backdrop-blur-md px-4 py-3 rounded-2xl border border-white/20 text-center"
+            >
+              <p
+                class="brand-font text-2xl font-black text-emerald-300"
+                id="dash-time-spent"
+              >
+                14 min
+              </p>
+              <p class="text-[10px] text-indigo-200 font-extrabold uppercase">
+                Played
+              </p>
+            </div>
+          </div>
+
+          <!-- LOGOUT BUTTON -->
+          <a href="Home page.html" class="w-full sm:w-auto">
+            <button 
+              onclick="handleParentLogout()"
+              class="w-full sm:w-auto bg-rose-500 hover:bg-rose-600 text-white brand-font text-sm px-5 py-3 rounded-2xl transition shadow-lg flex items-center justify-center gap-2 border-2 border-rose-400"
+            >
+              <i class="fa-solid fa-right-from-bracket"></i>
+              <span>Log Out</span>
+            </button>
+          </a>
+        </div>
+      </div>
+
+      <!-- Dashboard Controls Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+        <!-- 1. SCREEN TIME MANAGER -->
+        <div
+          class="md:col-span-6 bg-white rounded-3xl p-6 border-2 border-slate-100 shadow-sm space-y-5 flex flex-col justify-between"
+        >
+          <div>
+            <div class="flex justify-between items-center mb-4">
+              <h3
+                class="brand-font text-xl text-slate-800 flex items-center gap-2"
+              >
+                <i class="fa-solid fa-shield-cat text-orange-500"></i> Screen Time
+                Limits
+              </h3>
+              <span
+                id="limit-badge"
+                class="bg-orange-100 text-orange-700 text-xs font-extrabold px-3 py-1 rounded-full"
+                >30 Min Daily</span
+              >
+            </div>
+
+            <div
+              class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-3"
+            >
+              <div class="flex justify-between text-xs font-bold text-slate-700">
+                <span>Set Maximum Play Time</span>
+                <span id="slider-val" class="text-indigo-600 font-extrabold"
+                  >30 Minutes</span
+                >
+              </div>
+              <!-- Upgraded Slider: min="1", max="60", step="1" -->
+              <input
+                type="range"
+                id="screentime-slider"
+                min="1"
+                max="60"
+                value="30"
+                step="1"
+                oninput="updateSliderDisplay(this.value)"
+                class="w-full accent-indigo-600 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+              />
+              <div
+                class="flex justify-between text-[10px] text-slate-400 font-bold"
+              >
+                <span>1 min</span>
+                <span>30 min</span>
+                <span>60 min (1 hr)</span>
+              </div>
+            </div>
+          </div>
+
+          <button
+            onclick="saveScreenLimit()"
+            class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-3 rounded-2xl transition shadow-md mt-4"
+          >
+            Save Play Time Settings
+          </button>
+        </div>
+
+        <!-- 2. GAME AGE LOCKS -->
+        <div
+          class="md:col-span-6 bg-white rounded-3xl p-6 border-2 border-slate-100 shadow-sm space-y-5"
+        >
+          <h3 class="brand-font text-xl text-slate-800 flex items-center gap-2">
+            <i class="fa-solid fa-filter text-sky-500"></i> Allowed Age
+            Categories
+          </h3>
+
+          <div class="grid grid-cols-2 gap-3" id="age-locks-container">
+            <!-- Dynamic Toggles Rendered Here -->
+          </div>
+        </div>
+
+        <!-- 3. PARENTAL PIN / PASSWORD MANAGEMENT -->
+        <div
+          class="md:col-span-12 bg-white rounded-3xl p-6 border-2 border-slate-100 shadow-sm space-y-4"
+        >
+          <div class="flex items-center justify-between flex-wrap gap-2 border-b border-slate-100 pb-3">
+            <h3 class="brand-font text-xl text-slate-800 flex items-center gap-2">
+              <i class="fa-solid fa-key text-amber-500"></i> Parental Control PIN / Password
+            </h3>
+            <span class="text-xs bg-amber-100 text-amber-800 px-3 py-1 rounded-full font-bold">
+              Current PIN: <span id="current-pin-preview" class="font-mono">***</span>
+            </span>
+          </div>
+          <p class="text-xs text-slate-500 font-medium">
+            This PIN is required to unlock the web screen-timer break modal on the home page. Default PIN is <code class="bg-slate-100 px-1.5 py-0.5 rounded text-indigo-600 font-bold">123</code>.
+          </p>
+
+          <form onsubmit="handlePinChange(event)" class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+            <!-- Current PIN -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Current PIN</label>
+              <input
+                type="password"
+                id="old-pin-input"
+                placeholder="Enter current PIN"
+                maxlength="8"
+                required
+                class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-semibold focus:outline-none focus:border-indigo-500"
+              />
+            </div>
+
+            <!-- New PIN -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">New PIN</label>
+              <input
+                type="password"
+                id="new-pin-input"
+                placeholder="Enter new PIN (min 3 digits)"
+                maxlength="8"
+                required
+                class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-semibold focus:outline-none focus:border-indigo-500"
+              />
+            </div>
+
+            <!-- Confirm New PIN -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Confirm New PIN</label>
+              <input
+                type="password"
+                id="confirm-pin-input"
+                placeholder="Repeat new PIN"
+                maxlength="8"
+                required
+                class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-semibold focus:outline-none focus:border-indigo-500"
+              />
+            </div>
+
+            <div class="sm:col-span-3 flex justify-end">
+              <button
+                type="submit"
+                class="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs px-6 py-3 rounded-2xl transition shadow-md flex items-center gap-2"
+              >
+                <i class="fa-solid fa-lock"></i>
+                <span>Update Parental PIN</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- 4. SUBJECT PROGRESS ANALYTICS -->
+        <div
+          class="md:col-span-12 bg-white rounded-3xl p-6 border-2 border-slate-100 shadow-sm space-y-4"
+        >
+          <h3 class="brand-font text-xl text-slate-800 flex items-center gap-2">
+            <i class="fa-solid fa-chart-line text-emerald-500"></i> Weekly
+            Learning Skill Summary
+          </h3>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-amber-50 p-4 rounded-2xl border border-amber-100">
+              <p class="text-xs font-bold text-amber-800">Language & Stories</p>
+              <p class="brand-font text-2xl font-black text-amber-600">
+                85% Mastery
+              </p>
+              <div
+                class="w-full bg-amber-200 h-2 rounded-full mt-2 overflow-hidden"
+              >
+                <div
+                  class="bg-amber-500 h-full rounded-full"
+                  style="width: 85%"
+                ></div>
+              </div>
+            </div>
+            <div
+              class="bg-emerald-50 p-4 rounded-2xl border border-emerald-100"
+            >
+              <p class="text-xs font-bold text-emerald-800">STEM & Puzzles</p>
+              <p class="brand-font text-2xl font-black text-emerald-600">
+                70% Mastery
+              </p>
+              <div
+                class="w-full bg-emerald-200 h-2 rounded-full mt-2 overflow-hidden"
+              >
+                <div
+                  class="bg-emerald-500 h-full rounded-full"
+                  style="width: 70%"
+                ></div>
+              </div>
+            </div>
+            <div class="bg-sky-50 p-4 rounded-2xl border border-sky-100">
+              <p class="text-xs font-bold text-sky-800">Creative Arts</p>
+              <p class="brand-font text-2xl font-black text-sky-600">
+                92% Mastery
+              </p>
+              <div
+                class="w-full bg-sky-200 h-2 rounded-full mt-2 overflow-hidden"
+              >
+                <div
+                  class="bg-sky-500 h-full rounded-full"
+                  style="width: 92%"
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="kids-footer">
+      <div class="footer-container">
+        <!-- Column 1: Brand Info -->
+        <div class="footer-brand">
+          <a href="./Home page.html" class="logo">
+            <svg class="brand-avatar-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="32" cy="32" r="28" fill="#FACC15" stroke="#1E293B" stroke-width="2"/>
+              <path d="M19 26c.5-4 6.5-4 7 0M38 26c.5-4 6.5-4 7 0" stroke="#1E293B" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+              <circle cx="16" cy="33" r="4.5" fill="#FB7185"/>
+              <circle cx="48" cy="33" r="4.5" fill="#FB7185"/>
+              <path d="M22 34c0 0 1 12 10 12s10-12 10-12Z" fill="#881337" stroke="#1E293B" stroke-width="2"/>
+              <ellipse cx="32" cy="44" rx="6" ry="3.5" fill="#F43F5E"/>
+            </svg>
+            <span>Kids<span class="highlight">World</span></span>
+          </a>
+          <p>
+            Empowering curious young minds through safe, joyful, and playful education. Monitor progress and set healthy habits easily.
+          </p>
+          <!-- <div class="social-links">
+            <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+            <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+            <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+            <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+          </div> -->
+        </div>
+
+        <!-- Column 2: Quick Links -->
+        <div class="footer-column">
+          <h4>Explore</h4>
+          <ul>
+            <li><a href="./Home page.html">🚀 All Adventures</a></li>
+            <li><a href="./Home page.html">🎮 Active Quests</a></li>
+            <li><a href="./Home page.html">🧩 STEM & Puzzles</a></li>
+            <li><a href="./Home page.html">📖 Language & Stories</a></li>
+          </ul>
+        </div>
+
+        <!-- Column 3: Age Groups -->
+        <div class="footer-column">
+          <h4>Age Groups</h4>
+          <div class="age-badges">
+            <a href="./3-5AgeModule/Main.html" class="footer-age-pill">🐣 3-5 Yrs</a>
+            <a href="./6-8AgeModule/6-8-Main.html" class="footer-age-pill">🚀 6-8 Yrs</a>
+            <a href="./9-12AgeModule/9-12-Main.html" class="footer-age-pill">🧩 9-12 Yrs</a>
+            <a href="./13-15AgeModule/13-15-Main.html" class="footer-age-pill">⚡ 13-15 Yrs</a>
+          </div>
+        </div>
+
+        <!-- Column 4: Parents & Support -->
+        <div class="footer-column">
+          <h4>Parents Hub</h4>
+          <ul>
+            <li><a href="#">⏱️ Screen Time Controls</a></li>
+            <li><a href="#">📊 Progress Tracking</a></li>
+            <li><a href="#">🛡️ Safety & Privacy</a></li>
+            <li><a href="#">❓ Help & Support</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Bottom Bar -->
+      <div class="footer-bottom">
+        <p>© 2026 KidsWorld. All Rights Reserved.</p>
+        <div class="footer-bottom-links">
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms of Service</a>
+          <a href="#">Parental Controls Guide</a>
+        </div>
+      </div>
+    </footer>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+      // System State
+      const appState = {
+        parentPin: localStorage.getItem("parentPin") || "123",
+        screenTimeLimit: localStorage.getItem("screenTimeLimit") || 30,
+        timeUsedSeconds:
+          parseInt(localStorage.getItem("timeUsedSeconds")) || 891,
+        allowedAges: JSON.parse(localStorage.getItem("allowedAges")) || {
+          "3-5": true,
+          "6-8": true,
+          "9-12": true,
+          "13-15": true,
+        },
+      };
+
+      document.addEventListener("DOMContentLoaded", () => {
+        // Sync Slider with stored limit
+        document.getElementById("screentime-slider").value =
+          appState.screenTimeLimit;
+        document.getElementById("slider-val").textContent =
+          `${appState.screenTimeLimit} Minutes`;
+        document.getElementById("limit-badge").textContent =
+          `${appState.screenTimeLimit} Min Daily`;
+
+        renderAgeLocks();
+        startPlayTimer();
+      });
+
+      // Navigation Back to Kids Website
+      function handleBackNavigation() {
+        window.location.href = "Home page.html";
+      }
+
+      // PIN CHANGE FUNCTIONALITY
+      function handlePinChange(e) {
+        e.preventDefault();
+        const oldPin = document.getElementById("old-pin-input").value.trim();
+        const newPin = document.getElementById("new-pin-input").value.trim();
+        const confirmPin = document.getElementById("confirm-pin-input").value.trim();
+
+        // 1. Verify Current PIN
+        const currentSavedPin = localStorage.getItem("parentPin") || "123";
+        if (oldPin !== currentSavedPin) {
+          showToast("Incorrect current PIN! Please try again.");
+          return;
+        }
+
+        // 2. Validate Length
+        if (newPin.length < 3) {
+          showToast("New PIN must be at least 3 characters long!");
+          return;
+        }
+
+        // 3. Check Confirmation
+        if (newPin !== confirmPin) {
+          showToast("New PIN and Confirm PIN do not match!");
+          return;
+        }
+
+        // 4. Save to LocalStorage
+        localStorage.setItem("parentPin", newPin);
+        appState.parentPin = newPin;
+
+        // Reset Inputs
+        document.getElementById("old-pin-input").value = "";
+        document.getElementById("new-pin-input").value = "";
+        document.getElementById("confirm-pin-input").value = "";
+
+        showToast("Parental PIN updated successfully! 🔒");
+      }
+
+      // LOGOUT FUNCTIONALITY
+      function handleParentLogout() {
+        localStorage.setItem("isLoggedIn", "false");
+        showToast("Logged out successfully! Redirecting...");
+        setTimeout(() => {
+          window.location.href = "Home page.html";
+        }, 800);
+      }
+
+      // Render Age Permission Toggles
+      function renderAgeLocks() {
+        const container = document.getElementById("age-locks-container");
+        const ageLabels = {
+          "3-5": "3-5 Yrs",
+          "6-8": "6-8 Yrs",
+          "9-12": "9-12 Yrs",
+          "13-15": "13-15 Yrs",
+        };
+
+        container.innerHTML = Object.keys(appState.allowedAges)
+          .map(
+            (ageKey) => `
+          <div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200">
+            <span class="text-xs font-bold text-slate-700">${ageLabels[ageKey]}</span>
+            <input type="checkbox" ${appState.allowedAges[ageKey] ? "checked" : ""} onchange="toggleAgePermission('${ageKey}', this.checked)" class="w-5 h-5 accent-indigo-600 rounded cursor-pointer">
+          </div>
+        `,
+          )
+          .join("");
+      }
+
+      function toggleAgePermission(ageKey, isChecked) {
+        appState.allowedAges[ageKey] = isChecked;
+        localStorage.setItem(
+          "allowedAges",
+          JSON.stringify(appState.allowedAges),
+        );
+        showToast(`Age group ${ageKey} ${isChecked ? "Unlocked" : "Locked"}`);
+      }
+
+      function updateSliderDisplay(val) {
+        document.getElementById("slider-val").textContent = `${val} Minutes`;
+      }
+
+      function saveScreenLimit() {
+        const val = document.getElementById("screentime-slider").value;
+        appState.screenTimeLimit = val;
+        localStorage.setItem("screenTimeLimit", val);
+        document.getElementById("limit-badge").textContent = `${val} Min Daily`;
+        
+        // Instant sync to screen guard time remaining
+        localStorage.setItem("screenTimeRemaining", parseInt(val) * 60);
+
+        showToast(`Play Time Limit updated to ${val} Minutes!`);
+      }
+
+      function startPlayTimer() {
+        setInterval(() => {
+          appState.timeUsedSeconds++;
+          localStorage.setItem("timeUsedSeconds", appState.timeUsedSeconds);
+          const mins = Math.floor(appState.timeUsedSeconds / 60);
+          const secs = appState.timeUsedSeconds % 60;
+          document.getElementById("timer-display").textContent =
+            `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+          document.getElementById("dash-time-spent").textContent =
+            `${mins} min`;
+        }, 1000);
+      }
+
+      function showToast(msg) {
+        const container = document.getElementById("toast-container");
+        const toast = document.createElement("div");
+        toast.className =
+          "bg-slate-800 text-white brand-font text-xs font-medium px-4 py-3 rounded-2xl shadow-xl transition-all duration-300 toast-enter flex items-center gap-2";
+        toast.innerHTML = `<span>🛡️</span> <span>${msg}</span>`;
+        container.appendChild(toast);
+        setTimeout(() => toast.classList.add("toast-show"), 10);
+        setTimeout(() => {
+          toast.classList.remove("toast-show");
+          setTimeout(() => toast.remove(), 300);
+        }, 2500);
+      }
+    </script>
+  </body>
+</html>

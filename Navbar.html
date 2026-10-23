@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KidsWorld - Learning Through Play</title>
+
+    
+
+    <!-- Bootstrap 5.3 CSS & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Google Fonts: Fredoka for Puffy Bubble Kids Look -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
+
+    <link rel="script" href="script.js">
+
+    <style>
+        body {
+            font-family: 'Fredoka', cursive, sans-serif;
+            background: #f0fdf4;
+            margin: 0;
+        }
+
+        /* Responsive Brand Title (Exact Image 1 Font & Colors) */
+        .brand-logo-text {
+            font-family: 'Fredoka', cursive, sans-serif;
+            font-size: clamp(1.6rem, 3.2vw, 2.5rem);
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            user-select: none;
+            line-height: 1;
+        }
+
+        .brand-kids {
+            color: #0284c7; /* Image 1 Rich Blue */
+        }
+
+        .brand-world {
+            color: #f59e0b; /* Image 1 Warm Golden Yellow */
+        }
+
+        /* SVG Logo Responsive Size */
+        .brand-face-icon {
+            width: clamp(38px, 4vw, 50px);
+            height: clamp(38px, 4vw, 50px);
+            flex-shrink: 0;
+            filter: drop-shadow(0 2px 3px rgba(30, 41, 59, 0.15));
+        }
+
+        /* Timer Badge Styling */
+        .timer-badge {
+            border: 2px dashed #f97316;
+            background: #fff7ed;
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: clamp(0.85rem, 1.8vw, 1.05rem);
+            white-space: nowrap;
+        }
+
+        /* Kid Profile Button */
+        .kid-profile-btn {
+            border-radius: 50px;
+            background: #f59e0b;
+            color: #1e293b;
+            font-weight: 700;
+            font-size: clamp(0.85rem, 1.8vw, 1.05rem);
+            border: none;
+            border-bottom: 4px solid #b45309;
+            transition: all 0.12s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.06);
+            white-space: nowrap;
+        }
+
+        .kid-profile-btn:active {
+            transform: translateY(2px);
+            border-bottom: 2px solid #b45309;
+        }
+
+        /* Ultra-mobile screen optimizations */
+        @media (max-width: 420px) {
+            .navbar .container {
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+            .right-nav-controls {
+                gap: 6px !important;
+            }
+            .timer-badge {
+                padding: 4px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. RESPONSIVE NAVIGATION BAR -->
+    <nav class="navbar bg-white sticky-top py-2 py-md-3 shadow-sm">
+        <div class="container d-flex justify-content-between align-items-center">
+            
+            <!-- Brand Area: Smiling Face (Image 2) + Exact Text (Image 1) -->
+            <a class="navbar-brand d-flex align-items-center gap-2 m-0 p-0 text-decoration-none" href="#">
+                <svg class="brand-face-icon" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <linearGradient id="faceGrad" x1="16" y1="8" x2="48" y2="56" gradientUnits="userSpaceOnUse">
+                            <stop offset="0%" stop-color="#FDE047"/>
+                            <stop offset="100%" stop-color="#F59E0B"/>
+                        </linearGradient>
+                    </defs>
+
+                    <!-- Face Base -->
+                    <circle cx="32" cy="32" r="28" fill="url(#faceGrad)" stroke="#1E293B" stroke-width="1.8"/>
+                    
+                    <!-- Cheerful Laughing Eyes -->
+                    <path d="M19 26C19.5 22 25.5 22 26 26" stroke="#1E293B" stroke-width="3" stroke-linecap="round"/>
+                    <path d="M38 26C38.5 22 44.5 22 45 26" stroke="#1E293B" stroke-width="3" stroke-linecap="round"/>
+
+                    <!-- Rosy Cheeks -->
+                    <circle cx="16" cy="33" r="4.5" fill="#FB7185" stroke="#1E293B" stroke-width="0.8" opacity="0.85"/>
+                    <circle cx="48" cy="33" r="4.5" fill="#FB7185" stroke="#1E293B" stroke-width="0.8" opacity="0.85"/>
+
+                    <!-- Smiling Laughing Mouth -->
+                    <g id="sweetMouth">
+                        <path d="M22 34C22 34 23 46 32 46C41 46 42 34 42 34Z" fill="#881337" stroke="#1E293B" stroke-width="1.6"/>
+                        <mask id="mouthClip">
+                            <path d="M22 34C22 34 23 46 32 46C41 46 42 34 42 34Z" fill="#FFFFFF"/>
+                        </mask>
+                        <ellipse cx="32" cy="45" rx="6.5" ry="4" fill="#F43F5E" mask="url(#mouthClip)"/>
+                    </g>
+                </svg>
+
+                <!-- 100% Original Image 1 Text Style -->
+                <span class="brand-logo-text">
+                    <span class="brand-kids">Kids</span><span class="brand-world">World</span>
+                </span>
+            </a>
+
+            <!-- Right Controls: Smart Screen Timer & Kids Profile -->
+            <div class="d-flex align-items-center gap-2 gap-sm-3 right-nav-controls">
+                
+                <!-- Play Time Counter -->
+                <div class="timer-badge d-flex align-items-center gap-1 gap-sm-2 text-danger">
+                    <i class="bi bi-clock-history fs-6 fs-sm-5"></i>
+                    <span class="d-none d-sm-inline text-muted">Play Time:</span>
+                    <span id="sessionTimer" class="fw-bold text-danger">15:00</span>
+                </div>
+
+                <!-- Kids Profile Dropdown -->
+                <div class="dropdown">
+                    <button class="btn kid-profile-btn d-flex align-items-center gap-1 gap-sm-2 px-2 px-sm-3 py-1 py-sm-2" data-bs-toggle="dropdown" aria-expanded="false">
+                        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Lucky" width="30" height="30" class="rounded-circle bg-white" alt="Avatar">
+                        <span class="d-none d-md-inline">Arya</span>
+                        <span class="badge bg-danger rounded-pill px-2 py-1">🔥 5</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 mt-2">
+                        <li><a class="dropdown-item fw-bold py-2" href="#"><i class="bi bi-trophy text-warning me-2 fs-5"></i>My Badges</a></li>
+                        <li><a class="dropdown-item fw-bold py-2" href="#"><i class="bi bi-shield-lock text-info me-2 fs-5"></i>Parent Dashboard</a></li>
+                    </ul>
+                </div>
+
+            </div>
+
+        </div>
+    </nav>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

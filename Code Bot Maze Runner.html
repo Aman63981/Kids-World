@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Bot Maze Runner - KidsWorld</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='28' fill='%23FACC15' stroke='%231E293B' stroke-width='2'/%3E%3Cpath d='M19 26c.5-4 6.5-4 7 0M38 26c.5-4 6.5-4 7 0' stroke='%231E293B' stroke-width='3.5' stroke-linecap='round' fill='none'/%3E%3Ccircle cx='16' cy='33' r='4.5' fill='%23FB7185'/%3E%3Ccircle cx='48' cy='33' r='4.5' fill='%23FB7185'/%3E%3Cpath d='M22 34c0 0 1 12 10 12s10-12 10-12Z' fill='%23881337' stroke='%231E293B' stroke-width='2'/%3E%3Cellipse cx='32' cy='44' rx='6' ry='3.5' fill='%23F43F5E'/%3E%3C/svg%3E">
+
+    <!-- Bootstrap 5.3 & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Fredoka & Code Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Fira+Code:wght@600&display=swap" rel="stylesheet">
+    
+    <!-- Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Fredoka', cursive, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 60%, #312e81 100%);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            user-select: none;
+            touch-action: manipulation;
+            overflow-x: hidden;
+            color: #ffffff;
+        }
+
+        .game-wrapper {
+            width: 95%;
+            max-width: 960px;
+            background: rgba(15, 23, 42, 0.95);
+            border-radius: 36px;
+            padding: 24px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            border: 6px solid #38bdf8;
+            position: relative;
+        }
+
+        .status-pill {
+            border-radius: 50px;
+            padding: 8px 18px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* 5x5 Grid Matrix */
+        .maze-board {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(5, 1fr);
+            gap: 8px;
+            width: 380px;
+            height: 380px;
+            background: #1e293b;
+            padding: 12px;
+            border-radius: 24px;
+            border: 4px solid #0284c7;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+            margin: 0 auto;
+        }
+
+        .grid-cell {
+            background: #334155;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.8rem;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .grid-cell.obstacle {
+            background: #64748b;
+            border: 2px solid #475569;
+            box-shadow: inset 0 4px 6px rgba(0,0,0,0.4);
+        }
+
+        .grid-cell.target {
+            background: rgba(34, 197, 94, 0.25);
+            border: 2px dashed #22c55e;
+            animation: targetPulse 1.5s infinite alternate;
+        }
+        @keyframes targetPulse {
+            0% { box-shadow: 0 0 5px rgba(34, 197, 94, 0.4); }
+            100% { box-shadow: 0 0 20px rgba(34, 197, 94, 0.9); }
+        }
+
+        /* Rover Robot Element */
+        .bot-sprite {
+            font-size: 2.2rem;
+            line-height: 1;
+            transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
+        }
+
+        /* Visual Block Palette */
+        .blocks-palette {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: #1e293b;
+            padding: 16px;
+            border-radius: 24px;
+            border: 2px solid #475569;
+        }
+
+        .code-block {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.95rem;
+            padding: 10px 14px;
+            border-radius: 14px;
+            border: none;
+            color: #ffffff;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.25);
+            transition: all 0.12s;
+        }
+        .code-block:hover {
+            transform: translateX(4px);
+        }
+        .code-block:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 rgba(0,0,0,0.25);
+        }
+
+        .block-forward { background: #0284c7; border-left: 6px solid #38bdf8; }
+        .block-left { background: #7c3aed; border-left: 6px solid #c084fc; }
+        .block-right { background: #d97706; border-left: 6px solid #fbbf24; }
+
+        /* Program Sequence Tape */
+        .program-workspace {
+            background: #090d16;
+            border: 2px dashed #38bdf8;
+            border-radius: 20px;
+            padding: 12px;
+            min-height: 140px;
+            max-height: 180px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .command-slot {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.88rem;
+            padding: 6px 12px;
+            border-radius: 10px;
+            background: #1e293b;
+            border-left: 4px solid #38bdf8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #e2e8f0;
+            transition: background 0.2s;
+        }
+
+        .command-slot.active-executing {
+            background: #0369a1 !important;
+            box-shadow: 0 0 10px #38bdf8;
+            transform: scale(1.02);
+        }
+
+        .remove-cmd-btn {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            font-size: 1.1rem;
+            line-height: 1;
+        }
+
+        /* Buttons */
+        .kid-btn {
+            border-radius: 20px;
+            border-bottom: 5px solid rgba(0,0,0,0.25) !important;
+            font-weight: 700;
+            transition: all 0.15s ease-in-out;
+        }
+        .kid-btn:active {
+            transform: translateY(3px);
+            border-bottom: 2px solid rgba(0,0,0,0.25) !important;
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-wrapper">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <a href="../Home page.html" class="btn btn-outline-light kid-btn py-2 px-3">
+            <i class="bi bi-arrow-left me-1"></i> Dashboard
+        </a>
+        
+        <button class="btn btn-warning kid-btn px-3 py-2" id="langBtn" onclick="toggleLanguage()">
+            🌐 Switch to English
+        </button>
+
+        <span class="badge bg-info text-dark status-pill" id="scoreBadge">
+            ⚡ Level 1 / 3
+        </span>
+    </div>
+
+    <!-- Active Stage -->
+    <div id="playArea" class="mt-3">
+        <div class="text-center mb-3">
+            <h3 class="fw-bold text-info m-0" id="questPrompt">कोड ब्लॉक्स जोड़ें और बॉट को चार्जिंग स्टेशन तक पहुंचाएं! 🤖</h3>
+        </div>
+
+        <div class="row g-4 align-items-start">
+            <!-- Left Column: 5x5 Maze Matrix -->
+            <div class="col-lg-6 text-center">
+                <div class="maze-board" id="mazeBoard"></div>
+                <div class="mt-2 text-muted small" id="directionHint">Direction: Facing Right (East ➡️)</div>
+            </div>
+
+            <!-- Right Column: Visual Coding Workspace -->
+            <div class="col-lg-6">
+                <!-- Available Code Blocks -->
+                <label class="fw-bold mb-2 text-muted small"><i class="bi bi-boxes text-info me-1"></i> COMMAND BLOCKS (Tap to Add):</label>
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <button class="code-block block-forward w-100" onclick="addCommand('FORWARD')">
+                            <i class="bi bi-arrow-up-circle-fill"></i> <span class="cmd-txt-forward">Move Forward</span>
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button class="code-block block-left w-100" onclick="addCommand('TURN_LEFT')">
+                            <i class="bi bi-arrow-counterclockwise"></i> <span class="cmd-txt-left">Turn Left</span>
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button class="code-block block-right w-100" onclick="addCommand('TURN_RIGHT')">
+                            <i class="bi bi-arrow-clockwise"></i> <span class="cmd-txt-right">Turn Right</span>
+                        </button>
+                    </div>
+                    <div class="col-6">
+                        <button class="code-block w-100" style="background:#059669; border-left:6px solid #34d399;" onclick="clearCommands()">
+                            <i class="bi bi-trash3"></i> <span class="cmd-txt-clear">Clear Code</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Program Tape -->
+                <label class="fw-bold mb-2 text-muted small"><i class="bi bi-terminal-split text-warning me-1"></i> PROGRAM TAPE (Execution Sequence):</label>
+                <div class="program-workspace" id="programTape">
+                    <span class="text-muted small text-center mt-4" id="emptyTapeNotice">// Click blocks above to add commands...</span>
+                </div>
+
+                <!-- Execution Controls -->
+                <div class="d-flex gap-2 mt-3">
+                    <button class="btn btn-success kid-btn w-100 py-3 fs-5" id="runBtn" onclick="executeProgram()">
+                        <i class="bi bi-play-circle-fill me-1"></i> <span id="runBtnTxt">▶ Execute Code</span>
+                    </button>
+                    <button class="btn btn-outline-secondary kid-btn px-3" onclick="resetBotPosition()">
+                        <i class="bi bi-arrow-repeat fs-5"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Victory Screen -->
+    <div id="victoryArea" class="d-none text-center py-4">
+        <div style="font-size: 5rem;">🤖 ⚡ 🏆 🚀 ✨</div>
+        <h1 class="display-5 fw-bolder text-info mb-2" id="winTitle">कंप्यूटेशनल मास्टर!</h1>
+        <p class="fs-4 text-light mb-3" id="winSubtitle">आपने सभी भूलभुलैया के सही एल्गोरिदम कोड कर दिए!</p>
+
+        <div class="card p-3 my-3 mx-auto shadow-sm rounded-4 border-0 text-center" style="max-width: 360px; background: #1e293b; border: 3px dashed #38bdf8 !important; color: white;">
+            <span class="text-muted fw-bold">TOTAL LOGIC STARS</span>
+            <h1 class="display-4 fw-bold text-warning my-1" id="finalStarsDisplay">⭐ 300</h1>
+            <div class="fs-3 text-warning">⭐⭐⭐⭐⭐</div>
+            <span class="badge bg-success rounded-pill px-3 py-2 mt-2 fs-6">बैज: एल्गोरिदम आर्किटेक्ट 🧩</span>
+        </div>
+
+        <div class="d-flex justify-content-center gap-3 mt-4">
+            <button class="btn btn-warning kid-btn px-4 py-3 fs-5" onclick="restartFromLevel1()">
+                <i class="bi bi-arrow-clockwise me-1"></i> फिर से खेलें
+            </button>
+            <a href="../Home page.html" class="btn btn-primary kid-btn text-white px-4 py-3 fs-5 text-decoration-none">
+                <i class="bi bi-house-door me-1"></i> डैशबोर्ड
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- 1. Sound Synthesizer Engine ---
+    let audioCtx = null;
+    function getAudioContext() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        return audioCtx;
+    }
+
+    function playBotMoveBeep() {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(440, now);
+        osc.frequency.setValueAtTime(660, now + 0.05);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.12);
+    }
+
+    function playBotTurnWhirr() {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(200, now);
+        osc.frequency.linearRampToValueAtTime(400, now + 0.1);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.15);
+    }
+
+    function playCrashSound() {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.linearRampToValueAtTime(40, now + 0.3);
+        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.3);
+    }
+
+    function playLevelClearChime() {
+        const ctx = getAudioContext();
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.12);
+            gain.gain.setValueAtTime(0.3, ctx.currentTime + idx * 0.12);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + idx * 0.12 + 0.35);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(ctx.currentTime + idx * 0.12);
+            osc.stop(ctx.currentTime + idx * 0.12 + 0.35);
+        });
+    }
+
+    // --- 2. Voice Guidance Engine ---
+    let currentLang = 'hi';
+    let availableVoices = [];
+
+    function loadVoices() {
+        if ('speechSynthesis' in window) availableVoices = window.speechSynthesis.getVoices();
+    }
+    if ('speechSynthesis' in window) window.speechSynthesis.onvoiceschanged = loadVoices;
+
+    function speakText(text) {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.rate = 0.92;
+        utter.pitch = 1.25;
+
+        if (availableVoices.length === 0) availableVoices = window.speechSynthesis.getVoices();
+
+        if (currentLang === 'hi') {
+            utter.lang = 'hi-IN';
+            const v = availableVoices.find(item => item.lang.includes('hi'));
+            if (v) utter.voice = v;
+        } else {
+            utter.lang = 'en-US';
+            const v = availableVoices.find(item => item.lang.includes('en') && (item.name.includes('Samantha') || item.name.includes('Zira') || item.name.includes('Female')));
+            if (v) utter.voice = v;
+        }
+        window.speechSynthesis.speak(utter);
+    }
+
+    // --- 3. Levels Dataset ---
+    // Directions: 0 = North ⬆️, 1 = East ➡️, 2 = South ⬇️, 3 = West ⬅️
+    const levels = [
+        {
+            level: 1,
+            start: { r: 4, c: 0, dir: 1 }, // Start at bottom-left, facing East
+            target: { r: 4, c: 4 },        // Simple straight path with small turn
+            obstacles: [
+                { r: 3, c: 1 }, { r: 3, c: 2 }, { r: 3, c: 3 }
+            ]
+        },
+        {
+            level: 2,
+            start: { r: 4, c: 0, dir: 0 }, // Facing North
+            target: { r: 0, c: 4 },
+            obstacles: [
+                { r: 2, c: 0 }, { r: 2, c: 1 }, { r: 2, c: 2 },
+                { r: 4, c: 3 }, { r: 3, c: 3 }, { r: 1, c: 3 }
+            ]
+        },
+        {
+            level: 3,
+            start: { r: 0, c: 0, dir: 1 }, // Facing East
+            target: { r: 4, c: 4 },
+            obstacles: [
+                { r: 1, c: 0 }, { r: 1, c: 2 }, { r: 1, c: 3 },
+                { r: 3, c: 1 }, { r: 3, c: 2 }, { r: 3, c: 4 }
+            ]
+        }
+    ];
+
+    let currentLevelIndex = 0;
+    let botState = { r: 0, c: 0, dir: 1 };
+    let userCommands = [];
+    let isExecuting = false;
+
+    // --- 4. Render Grid & Bot ---
+    function initLevel(index) {
+        const lvl = levels[index];
+        botState = { ...lvl.start };
+        userCommands = [];
+        isExecuting = false;
+        renderProgramTape();
+        renderMaze();
+        document.getElementById('scoreBadge').textContent = `⚡ Level ${index + 1} / 3`;
+
+        const guide = (currentLang === 'hi')
+            ? `लेवल ${index + 1}: कोड ब्लॉक्स जोड़ें और बॉट को बैटरी स्टेशन ⚡ तक ले जाएं!`
+            : `Level ${index + 1}: Program the bot to reach the Charging Station ⚡!`;
+        speakText(guide);
+    }
+
+    function renderMaze() {
+        const board = document.getElementById('mazeBoard');
+        board.innerHTML = '';
+        const lvl = levels[currentLevelIndex];
+
+        for (let r = 0; r < 5; r++) {
+            for (let c = 0; c < 5; c++) {
+                const cell = document.createElement('div');
+                cell.className = 'grid-cell';
+
+                // Check obstacle
+                const isObs = lvl.obstacles.some(o => o.r === r && o.c === c);
+                if (isObs) {
+                    cell.classList.add('obstacle');
+                    cell.innerHTML = '🪨';
+                }
+
+                // Check target
+                if (lvl.target.r === r && lvl.target.c === c) {
+                    cell.classList.add('target');
+                    cell.innerHTML = '⚡';
+                }
+
+                // Check bot
+                if (botState.r === r && botState.c === c) {
+                    const bot = document.createElement('div');
+                    bot.className = 'bot-sprite';
+                    bot.id = 'botSprite';
+                    bot.textContent = '🤖';
+                    // Rotate bot based on direction: 0 = 270deg, 1 = 0deg, 2 = 90deg, 3 = 180deg
+                    const angles = [270, 0, 90, 180];
+                    bot.style.transform = `rotate(${angles[botState.dir]}deg)`;
+                    cell.appendChild(bot);
+                }
+
+                board.appendChild(cell);
+            }
+        }
+        updateDirectionHint();
+    }
+
+    function updateDirectionHint() {
+        const dirsHi = ['उत्तर (North ⬆️)', 'पूर्व (East ➡️)', 'दक्षिण (South ⬇️)', 'पश्चिम (West ⬅️)'];
+        const dirsEn = ['Facing North ⬆️', 'Facing East ➡️', 'Facing South ⬇️', 'Facing West ⬅️'];
+        document.getElementById('directionHint').textContent = (currentLang === 'hi') 
+            ? `दिशा: ${dirsHi[botState.dir]}` 
+            : `Direction: ${dirsEn[botState.dir]}`;
+    }
+
+    // --- 5. Programming Sequence Tape ---
+    function addCommand(cmd) {
+        if (isExecuting) return;
+        getAudioContext();
+        playBotMoveBeep();
+
+        userCommands.push(cmd);
+        renderProgramTape();
+    }
+
+    function removeCommand(idx) {
+        if (isExecuting) return;
+        userCommands.splice(idx, 1);
+        renderProgramTape();
+    }
+
+    function clearCommands() {
+        if (isExecuting) return;
+        userCommands = [];
+        renderProgramTape();
+        resetBotPosition();
+    }
+
+    function renderProgramTape() {
+        const tape = document.getElementById('programTape');
+        tape.innerHTML = '';
+
+        if (userCommands.length === 0) {
+            tape.innerHTML = `<span class="text-muted small text-center mt-4" id="emptyTapeNotice">${(currentLang === 'hi') ? '// ऊपर से ब्लॉक चुनकर प्रोग्राम बनाएं...' : '// Click blocks above to add commands...'}</span>`;
+            return;
+        }
+
+        userCommands.forEach((cmd, idx) => {
+            const slot = document.createElement('div');
+            slot.className = 'command-slot';
+            slot.id = `cmd_slot_${idx}`;
+
+            let label = '';
+            if (cmd === 'FORWARD') label = `0${idx+1}: moveForward() ⬆️`;
+            if (cmd === 'TURN_LEFT') label = `0${idx+1}: turnLeft() ↩️`;
+            if (cmd === 'TURN_RIGHT') label = `0${idx+1}: turnRight() ↪️`;
+
+            slot.innerHTML = `
+                <span>${label}</span>
+                <button class="remove-cmd-btn" onclick="removeCommand(${idx})">&times;</button>
+            `;
+            tape.appendChild(slot);
+        });
+    }
+
+    function resetBotPosition() {
+        if (isExecuting) return;
+        const lvl = levels[currentLevelIndex];
+        botState = { ...lvl.start };
+        renderMaze();
+    }
+
+    // --- 6. Execution Runner Engine ---
+    async function executeProgram() {
+        if (isExecuting || userCommands.length === 0) return;
+        getAudioContext();
+
+        isExecuting = true;
+        document.getElementById('runBtn').disabled = true;
+        resetBotPosition();
+
+        const lvl = levels[currentLevelIndex];
+        // Direction deltas: 0=Up (-r), 1=Right (+c), 2=Down (+r), 3=Left (-c)
+        const dr = [-1, 0, 1, 0];
+        const dc = [0, 1, 0, -1];
+
+        for (let i = 0; i < userCommands.length; i++) {
+            // Highlight current executing command slot
+            document.querySelectorAll('.command-slot').forEach(s => s.classList.remove('active-executing'));
+            const currentSlot = document.getElementById(`cmd_slot_${i}`);
+            if (currentSlot) currentSlot.classList.add('active-executing');
+
+            const cmd = userCommands[i];
+
+            if (cmd === 'TURN_LEFT') {
+                playBotTurnWhirr();
+                botState.dir = (botState.dir + 3) % 4;
+            } else if (cmd === 'TURN_RIGHT') {
+                playBotTurnWhirr();
+                botState.dir = (botState.dir + 1) % 4;
+            } else if (cmd === 'FORWARD') {
+                playBotMoveBeep();
+                const nextR = botState.r + dr[botState.dir];
+                const nextC = botState.c + dc[botState.dir];
+
+                // Collision Check 1: Boundary
+                if (nextR < 0 || nextR > 4 || nextC < 0 || nextC > 4) {
+                    triggerCrash("सीमा से बाहर टक्कर (Boundary Crash)!");
+                    return;
+                }
+
+                // Collision Check 2: Obstacle rock
+                const isHit = lvl.obstacles.some(o => o.r === nextR && o.c === nextC);
+                if (isHit) {
+                    triggerCrash("चट्टान से टक्कर (Obstacle Crash)!");
+                    return;
+                }
+
+                botState.r = nextR;
+                botState.c = nextC;
+            }
+
+            renderMaze();
+            await new Promise(res => setTimeout(res, 550));
+        }
+
+        // Execution Finished -> Check Target
+        document.querySelectorAll('.command-slot').forEach(s => s.classList.remove('active-executing'));
+
+        if (botState.r === lvl.target.r && botState.c === lvl.target.c) {
+            // Level Cleared!
+            playLevelClearChime();
+            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+
+            const winMsg = (currentLang === 'hi') 
+                ? "शाबाश! बॉट सुरक्षित रूप से चार्जिंग स्टेशन पहुंच गया!" 
+                : "Great code! The Bot reached the charging station!";
+            speakText(winMsg);
+
+            setTimeout(() => {
+                isExecuting = false;
+                document.getElementById('runBtn').disabled = false;
+                currentLevelIndex++;
+                if (currentLevelIndex < levels.length) {
+                    initLevel(currentLevelIndex);
+                } else {
+                    showFinalVictory();
+                }
+            }, 1800);
+
+        } else {
+            // Did not reach target
+            playCrashSound();
+            const missMsg = (currentLang === 'hi')
+                ? "प्रोग्राम पूरा हुआ, लेकिन बॉट चार्जिंग स्टेशन नहीं पहुंचा। कोड बदलो!"
+                : "Program ended, but bot did not reach target. Debug your code!";
+            speakText(missMsg);
+            isExecuting = false;
+            document.getElementById('runBtn').disabled = false;
+        }
+    }
+
+    function triggerCrash(reason) {
+        playCrashSound();
+        const botEl = document.getElementById('botSprite');
+        if (botEl) botEl.textContent = '💥';
+
+        const crashMsg = (currentLang === 'hi') 
+            ? `बग डिटेक्टेड! ${reason} फिर से कोशिश करें!` 
+            : `Bug Detected! Collision happened! Debug your blocks!`;
+        speakText(crashMsg);
+
+        setTimeout(() => {
+            isExecuting = false;
+            document.getElementById('runBtn').disabled = false;
+            resetBotPosition();
+            document.querySelectorAll('.command-slot').forEach(s => s.classList.remove('active-executing'));
+        }, 1200);
+    }
+
+    // --- 7. State & Translations ---
+    function toggleLanguage() {
+        currentLang = (currentLang === 'hi') ? 'en' : 'hi';
+        document.getElementById('langBtn').textContent = (currentLang === 'hi') ? "🌐 Switch to English" : "🌐 हिंदी में बदलें";
+        document.getElementById('questPrompt').textContent = (currentLang === 'hi') 
+            ? "कोड ब्लॉक्स जोड़ें और बॉट को चार्जिंग स्टेशन तक पहुंचाएं! 🤖" 
+            : "Assemble visual blocks to guide CodeBot to the charging station! 🤖";
+        
+        document.querySelector('.cmd-txt-forward').textContent = (currentLang === 'hi') ? "आगे बढ़ें (Forward)" : "Move Forward";
+        document.querySelector('.cmd-txt-left').textContent = (currentLang === 'hi') ? "बाएं मुड़ें (Left)" : "Turn Left";
+        document.querySelector('.cmd-txt-right').textContent = (currentLang === 'hi') ? "दाएं मुड़ें (Right)" : "Turn Right";
+        document.querySelector('.cmd-txt-clear').textContent = (currentLang === 'hi') ? "कोड साफ़ करें" : "Clear Code";
+        document.getElementById('runBtnTxt').textContent = (currentLang === 'hi') ? "▶ कोड रन करें" : "▶ Execute Code";
+
+        initLevel(currentLevelIndex);
+    }
+
+    function showFinalVictory() {
+        document.getElementById('playArea').classList.add('d-none');
+        document.getElementById('victoryArea').classList.remove('d-none');
+
+        if (currentLang === 'hi') {
+            document.getElementById('winTitle').textContent = "कंप्यूटेशनल मास्टर!";
+            document.getElementById('winSubtitle').textContent = "आपने सभी भूलभुलैया के सही एल्गोरिदम कोड कर दिए!";
+        } else {
+            document.getElementById('winTitle').textContent = "Algorithm Architect!";
+            document.getElementById('winSubtitle').textContent = "You successfully coded navigation algorithms for all mazes!";
+        }
+
+        playLevelClearChime();
+        confetti({ particleCount: 160, spread: 90, origin: { y: 0.55 } });
+
+        setTimeout(() => {
+            const cheer = (currentLang === 'hi') 
+                ? "हुर्रे! आपने कोडिंग भूलभुलैया क्वेस्ट पूरा कर लिया!" 
+                : "Hooray! You mastered the CodeBot Maze Runner!";
+            speakText(cheer);
+        }, 500);
+    }
+
+    function restartFromLevel1() {
+        currentLevelIndex = 0;
+        document.getElementById('victoryArea').classList.add('d-none');
+        document.getElementById('playArea').classList.remove('d-none');
+        initLevel(0);
+    }
+
+    window.onload = () => {
+        loadVoices();
+        initLevel(0);
+    };
+</script>
+</body>
+</html>

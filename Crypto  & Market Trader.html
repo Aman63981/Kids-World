@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto & Market Trader - KidsWorld</title>
+
+    <!-- Favicon: Trading Candlestick -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='28' y='8' width='8' height='48' fill='%2310B981' rx='2'/%3E%3Crect x='20' y='18' width='24' height='24' fill='%2310B981' rx='3'/%3E%3Cline x1='12' y1='54' x2='52' y2='54' stroke='%23334155' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E">
+
+    <!-- Bootstrap 5.3 & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@500;700&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background: #020617;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            user-select: none;
+            touch-action: manipulation;
+            overflow-x: hidden;
+            color: #e2e8f0;
+        }
+
+        .trader-wrapper {
+            width: 96%;
+            max-width: 980px;
+            background: rgba(15, 23, 42, 0.96);
+            border-radius: 28px;
+            padding: 22px;
+            box-shadow: 0 0 45px rgba(16, 185, 129, 0.2), inset 0 0 15px rgba(16, 185, 129, 0.05);
+            border: 3px solid #10b981;
+            position: relative;
+        }
+
+        .hud-stat {
+            font-family: 'Fira Code', monospace;
+            background: #020617;
+            border: 1px solid #334155;
+            padding: 6px 14px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+            color: #38bdf8;
+        }
+
+        /* News Ticker Bar */
+        .news-ticker-box {
+            background: #0f172a;
+            border: 2px solid #334155;
+            border-radius: 16px;
+            padding: 10px 18px;
+            margin-top: 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .news-label {
+            background: #ef4444;
+            color: #ffffff;
+            font-size: 0.8rem;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 6px;
+            text-transform: uppercase;
+        }
+
+        /* Chart Canvas */
+        .chart-container {
+            width: 100%;
+            height: 220px;
+            background: #030712;
+            border: 2px solid #1f2937;
+            border-radius: 20px;
+            overflow: hidden;
+            margin-top: 14px;
+            position: relative;
+        }
+
+        #chartCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Assets Trading Grid */
+        .asset-row {
+            background: #0f172a;
+            border: 2px solid #1e293b;
+            border-radius: 18px;
+            padding: 12px 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            transition: all 0.15s ease;
+        }
+        .asset-row:hover {
+            border-color: #38bdf8;
+        }
+        .asset-row.selected {
+            border-color: #10b981;
+            background: rgba(16, 185, 129, 0.08);
+        }
+
+        .trade-btn {
+            font-family: 'Fira Code', monospace;
+            border-radius: 10px;
+            padding: 6px 14px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            border: none;
+            transition: all 0.15s ease-in-out;
+        }
+        .btn-buy { background: #10b981; color: #020617; }
+        .btn-buy:hover { background: #34d399; box-shadow: 0 0 10px rgba(16, 185, 129, 0.6); }
+
+        .btn-sell { background: #ef4444; color: #ffffff; }
+        .btn-sell:hover { background: #f87171; box-shadow: 0 0 10px rgba(239, 68, 68, 0.6); }
+
+        .cyber-btn {
+            font-family: 'Fira Code', monospace;
+            border-radius: 12px;
+            padding: 8px 18px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            border: 2px solid #10b981;
+            background: rgba(16, 185, 129, 0.15);
+            color: #ecfeff;
+            cursor: pointer;
+            transition: all 0.15s ease-in-out;
+        }
+        .cyber-btn:hover {
+            background: #10b981;
+            color: #020617;
+            box-shadow: 0 0 16px rgba(16, 185, 129, 0.6);
+        }
+
+        /* Tutorial Modal */
+        .tutorial-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(2, 6, 23, 0.94);
+            backdrop-filter: blur(8px);
+            border-radius: 28px;
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .tutorial-box {
+            background: #0f172a;
+            border: 3px solid #10b981;
+            border-radius: 24px;
+            padding: 24px;
+            max-width: 660px;
+            width: 100%;
+            box-shadow: 0 0 35px rgba(16, 185, 129, 0.35);
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+<div class="trader-wrapper">
+    <!-- Graphical Tutorial Modal -->
+    <div class="tutorial-overlay" id="tutorialModal">
+        <div class="tutorial-box">
+            <h3 class="fw-bold text-success mb-1" id="tutHeading">MARKET SIMULATOR: HOW TO PLAY 📈</h3>
+            <p class="small text-muted mb-2" id="tutSub">Analyze simulated market headlines and predict stock movements:</p>
+
+            <div style="width: 100%; max-width: 560px; height: 180px; margin: 12px auto; border-radius: 16px; border: 2px solid #1e293b; background: #030712;">
+                <canvas id="demoCanvas" width="560" height="180"></canvas>
+            </div>
+
+            <div class="mb-3">
+                <span class="hud-stat text-warning" id="demoGuideTxt">
+                    Strategy: "Good News" raises price (BUY early)! "Bad News" drops price (SELL)!
+                </span>
+            </div>
+
+            <button class="cyber-btn px-4 py-2 fs-6" onclick="closeTutorial()">
+                <i class="bi bi-wallet2 me-1"></i> <span id="tutStartBtn">START TRADING ($10,000 READY)</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Header Controls & Wallet HUD -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="d-flex gap-2">
+            <a href="../Home page.html" class="cyber-btn text-decoration-none">
+                <i class="bi bi-arrow-left me-1"></i> Dashboard
+            </a>
+            <button class="cyber-btn" onclick="openTutorial()">
+                <i class="bi bi-question-diamond me-1"></i> <span id="guideBtnTxt">Guide</span>
+            </button>
+        </div>
+
+        <button class="cyber-btn text-warning border-warning" id="langBtn" onclick="toggleLanguage()">
+            🌐 Switch to English
+        </button>
+
+        <div class="d-flex gap-2">
+            <span class="hud-stat text-success" id="cashBadge">
+                💵 Cash: $10,000
+            </span>
+            <span class="hud-stat text-info" id="netWorthBadge">
+                📊 Portfolio: $10,000
+            </span>
+        </div>
+    </div>
+
+    <!-- News Ticker -->
+    <div class="news-ticker-box">
+        <span class="news-label" id="newsTag">FLASH NEWS</span>
+        <span id="newsHeadline" class="small text-light">Tech giant NovaTech announces autonomous quantum AI chip!</span>
+    </div>
+
+    <!-- Price Trend Chart Canvas -->
+    <div class="chart-container">
+        <canvas id="chartCanvas" width="920" height="220"></canvas>
+    </div>
+
+    <!-- Active Stocks & Crypto Assets -->
+    <div id="assetsList" class="mt-2"></div>
+
+    <!-- Next Trading Day Advance Button -->
+    <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top border-secondary flex-wrap gap-2">
+        <span class="small text-muted font-monospace" id="dayTracker">TRADING DAY: 01 / 07 | TARGET: $15,000</span>
+        <button class="cyber-btn px-4 py-2 text-warning" onclick="advanceDay()">
+            <i class="bi bi-fast-forward-fill me-1"></i> <span id="advanceBtnTxt">Next Market Day ⏩</span>
+        </button>
+    </div>
+
+    <!-- Victory Screen -->
+    <div id="victoryArea" class="d-none text-center py-4">
+        <div style="font-size: 5rem;">📈 💰 🏆 🪙 🌟</div>
+        <h1 class="display-5 fw-bolder text-success mb-2" id="winTitle">WALL STREET PRO!</h1>
+        <p class="fs-4 text-light mb-3" id="winSubtitle">You multiplied your capital from $10,000 to over $15,000!</p>
+
+        <div class="card p-3 my-3 mx-auto shadow-sm rounded-4 border-0 text-center" style="max-width: 380px; background: #0f172a; border: 2px dashed #10b981 !important; color: white;">
+            <span class="text-muted fw-bold small">TOTAL PORTFOLIO RETURN</span>
+            <h1 class="display-4 fw-bold text-success my-1" id="finalReturnScore">+54.2%</h1>
+            <div class="fs-3 text-warning">⭐⭐⭐⭐⭐</div>
+            <span class="badge bg-success rounded-pill px-3 py-2 mt-2 fs-6">BADGE: SMART INVESTOR 🎖️</span>
+        </div>
+
+        <div class="d-flex justify-content-center gap-3 mt-4">
+            <button class="cyber-btn px-4 py-3 fs-5" onclick="restartMarket()">
+                <i class="bi bi-arrow-clockwise me-1"></i> Trade Again
+            </button>
+            <a href="../Home page.html" class="cyber-btn text-white px-4 py-3 fs-5 text-decoration-none">
+                <i class="bi bi-house-door me-1"></i> Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- 1. Audio Synthesizer Engine ---
+    let audioCtx = null;
+    function getAudioContext() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        return audioCtx;
+    }
+
+    function playBuyCashChirp() {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(587.33, now);
+        osc.frequency.exponentialRampToValueAtTime(880, now + 0.1);
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.1);
+    }
+
+    function playSellCashChirp() {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        [783.99, 1046.50].forEach((f, i) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(f, now + i * 0.08);
+            gain.gain.setValueAtTime(0.25, now + i * 0.08);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + i * 0.08 + 0.15);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + i * 0.08);
+            osc.stop(now + i * 0.08 + 0.15);
+        });
+    }
+
+    function playMarketAdvanceHum() {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(120, now);
+        osc.frequency.linearRampToValueAtTime(240, now + 0.15);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.15);
+    }
+
+    // --- 2. Voice Guidance Engine ---
+    let currentLang = 'hi';
+    let availableVoices = [];
+
+    function loadVoices() {
+        if ('speechSynthesis' in window) availableVoices = window.speechSynthesis.getVoices();
+    }
+    if ('speechSynthesis' in window) window.speechSynthesis.onvoiceschanged = loadVoices;
+
+    function speakText(text) {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.rate = 0.95;
+        utter.pitch = 1.1;
+
+        if (availableVoices.length === 0) availableVoices = window.speechSynthesis.getVoices();
+
+        if (currentLang === 'hi') {
+            utter.lang = 'hi-IN';
+            const v = availableVoices.find(item => item.lang.includes('hi'));
+            if (v) utter.voice = v;
+        } else {
+            utter.lang = 'en-US';
+            const v = availableVoices.find(item => item.lang.includes('en') && (item.name.includes('Samantha') || item.name.includes('Zira')));
+            if (v) utter.voice = v;
+        }
+        window.speechSynthesis.speak(utter);
+    }
+
+    // --- 3. LIVE GRAPHICAL TUTORIAL ANIMATION ---
+    const demoCanvas = document.getElementById('demoCanvas');
+    const dCtx = demoCanvas.getContext('2d');
+    let demoTime = 0;
+    let demoAnimId = null;
+
+    function runDemoLoop() {
+        dCtx.clearRect(0, 0, demoCanvas.width, demoCanvas.height);
+        demoTime = (demoTime + 1) % 240;
+
+        // Draw Mini Candlestick / Line
+        dCtx.strokeStyle = "#34d399";
+        dCtx.lineWidth = 3;
+        dCtx.beginPath();
+        dCtx.moveTo(40, 130);
+        dCtx.lineTo(120, 110);
+        dCtx.lineTo(200, 140);
+        dCtx.lineTo(300, 80);
+        dCtx.lineTo(400, 50);
+        dCtx.stroke();
+
+        // Animated Buyer cursor
+        let cX = 200, cY = 140, actionTxt = "Buy the Dip ($100)";
+        if (demoTime > 120) {
+            cX = 400; cY = 50;
+            actionTxt = "Sell at Peak ($160)! +$60 Profit";
+        }
+
+        dCtx.fillStyle = demoTime > 120 ? "#ef4444" : "#10b981";
+        dCtx.beginPath();
+        dCtx.arc(cX, cY, 8, 0, Math.PI * 2);
+        dCtx.fill();
+
+        dCtx.font = "bold 14px Fira Code";
+        dCtx.fillText(actionTxt, cX - 60, cY - 18);
+
+        demoAnimId = requestAnimationFrame(runDemoLoop);
+    }
+
+    function closeTutorial() {
+        getAudioContext();
+        if (demoAnimId) cancelAnimationFrame(demoAnimId);
+        document.getElementById('tutorialModal').classList.add('d-none');
+        const hint = (currentLang === 'hi')
+            ? "बाज़ार खुला है! ताज़ा खबरें पढ़ें और कम दाम पर खरीदकर ऊंचे दाम पर बेचें!"
+            : "Market open! Read breaking headlines, buy low and sell high!";
+        speakText(hint);
+    }
+
+    function openTutorial() {
+        getAudioContext();
+        document.getElementById('tutorialModal').classList.remove('d-none');
+        demoTime = 0;
+        runDemoLoop();
+    }
+
+    // --- 4. Market & Financial Engine ---
+    let currentDay = 1;
+    const TOTAL_DAYS = 7;
+    let cash = 10000;
+
+    const assets = [
+        { id: 'nova', name: 'NovaTech AI', icon: '🤖', price: 240, history: [220, 230, 240], holdings: 0 },
+        { id: 'solar', name: 'GreenEnergy Solar', icon: '☀️', price: 110, history: [125, 118, 110], holdings: 0 },
+        { id: 'byte', name: 'ByteCoin Crypto', icon: '🪙', price: 450, history: [390, 420, 450], holdings: 0 },
+        { id: 'agri', name: 'Global Agri Crops', icon: '🌾', price: 80, history: [85, 82, 80], holdings: 0 }
+    ];
+
+    let selectedAssetId = 'nova';
+
+    const newsRounds = [
+        {
+            headlineHi: "टेक दिग्गज NovaTech ने जारी किया क्रांतिकारी ऑटोनॉमस चिप!",
+            headlineEn: "Tech giant NovaTech announces autonomous quantum AI chip!",
+            effects: { nova: 1.35, solar: 1.05, byte: 1.15, agri: 0.98 }
+        },
+        {
+            headlineHi: "अचानक सूखे से फसलों का उत्पादन गिरा, अनाज की भारी कमी!",
+            headlineEn: "Severe global drought causes crop yields to plummet!",
+            effects: { nova: 0.96, solar: 1.02, byte: 1.05, agri: 1.45 }
+        },
+        {
+            headlineHi: "सोलर ऊर्जा पर नई सरकारी सब्सिडी और टैक्स छूट लागू!",
+            headlineEn: "Government announces massive clean solar energy subsidies!",
+            effects: { nova: 1.04, solar: 1.40, byte: 0.95, agri: 1.02 }
+        },
+        {
+            headlineHi: "क्रिप्टो नेटवर्क में रेगुलेटरी जांच के बाद पैनिक सेलिंग शुरू!",
+            headlineEn: "Regulatory crackdowns cause panic dip in digital assets!",
+            effects: { nova: 0.95, solar: 1.02, byte: 0.65, agri: 1.04 }
+        },
+        {
+            headlineHi: "ByteCoin को वैश्विक भुगतान नेटवर्क ने आधिकारिक रूप से स्वीकारा!",
+            headlineEn: "ByteCoin approved for institutional payments worldwide!",
+            effects: { nova: 1.12, solar: 1.05, byte: 1.60, agri: 0.98 }
+        },
+        {
+            headlineHi: "वैश्विक सप्लाई चेन संकट: चिपमेकर्स को पार्ट्स मिलने में देरी!",
+            headlineEn: "Global supply bottleneck halts semiconductor production!",
+            effects: { nova: 0.78, solar: 0.92, byte: 1.08, agri: 1.10 }
+        },
+        {
+            headlineHi: "ग्रीन हाइड्रोजन और सोलर टेक में बड़ी तकनीकी खोज!",
+            headlineEn: "Breakthrough recorded in high-density solar energy storage!",
+            effects: { nova: 1.08, solar: 1.50, byte: 1.12, agri: 1.05 }
+        }
+    ];
+
+    function calculateNetWorth() {
+        let totalHoldingsValue = 0;
+        assets.forEach(a => {
+            totalHoldingsValue += a.price * a.holdings;
+        });
+        return Math.round(cash + totalHoldingsValue);
+    }
+
+    function updateHUD() {
+        const netWorth = calculateNetWorth();
+        document.getElementById('cashBadge').textContent = `💵 Cash: $${cash.toLocaleString()}`;
+        document.getElementById('netWorthBadge').textContent = `📊 Portfolio: $${netWorth.toLocaleString()}`;
+        document.getElementById('dayTracker').textContent = `TRADING DAY: 0${currentDay} / 0${TOTAL_DAYS} | TARGET: $15,000`;
+
+        if (netWorth >= 15000 && currentDay >= TOTAL_DAYS) {
+            setTimeout(showVictoryScreen, 600);
+        }
+    }
+
+    function renderAssetsList() {
+        const container = document.getElementById('assetsList');
+        container.innerHTML = '';
+
+        assets.forEach(a => {
+            const isUp = a.history.length > 1 && a.price >= a.history[a.history.length - 2];
+            const changeColor = isUp ? 'text-success' : 'text-danger';
+            const changeIcon = isUp ? '▲' : '▼';
+
+            const row = document.createElement('div');
+            row.className = `asset-row ${selectedAssetId === a.id ? 'selected' : ''}`;
+            row.onclick = () => selectAsset(a.id);
+
+            row.innerHTML = `
+                <div class="d-flex align-items-center gap-3">
+                    <span style="font-size: 1.8rem;">${a.icon}</span>
+                    <div>
+                        <div class="fw-bold">${a.name}</div>
+                        <div class="small text-muted font-monospace">Owned: ${a.holdings} shares</div>
+                    </div>
+                </div>
+                <div class="text-end">
+                    <div class="fw-bold font-monospace fs-5">$${a.price}</div>
+                    <div class="small ${changeColor} font-monospace">${changeIcon} ${(Math.random()*4 + 1).toFixed(1)}%</div>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="trade-btn btn-buy" onclick="buyAsset('${a.id}', event)">BUY (5x)</button>
+                    <button class="trade-btn btn-sell" onclick="sellAsset('${a.id}', event)">SELL (5x)</button>
+                </div>
+            `;
+            container.appendChild(row);
+        });
+    }
+
+    function selectAsset(id) {
+        selectedAssetId = id;
+        renderAssetsList();
+        drawChart();
+    }
+
+    function buyAsset(id, e) {
+        if (e) e.stopPropagation();
+        getAudioContext();
+        const a = assets.find(item => item.id === id);
+        const cost = a.price * 5;
+
+        if (cash >= cost) {
+            cash -= cost;
+            a.holdings += 5;
+            playBuyCashChirp();
+            updateHUD();
+            renderAssetsList();
+        } else {
+            const noCash = (currentLang === 'hi') ? "पर्याप्त नकद राशि नहीं है!" : "Not enough cash!";
+            speakText(noCash);
+        }
+    }
+
+    function sellAsset(id, e) {
+        if (e) e.stopPropagation();
+        getAudioContext();
+        const a = assets.find(item => item.id === id);
+
+        if (a.holdings >= 5) {
+            cash += a.price * 5;
+            a.holdings -= 5;
+            playSellCashChirp();
+            updateHUD();
+            renderAssetsList();
+        } else {
+            const noShares = (currentLang === 'hi') ? "बेचने के लिए पर्याप्त शेयर नहीं हैं!" : "No shares to sell!";
+            speakText(noShares);
+        }
+    }
+
+    function advanceDay() {
+        getAudioContext();
+        if (currentDay >= TOTAL_DAYS) {
+            checkFinalOutcome();
+            return;
+        }
+
+        playMarketAdvanceHum();
+        currentDay++;
+
+        // Apply news multipliers to assets
+        const roundNews = newsRounds[currentDay - 1];
+        assets.forEach(a => {
+            const mult = roundNews.effects[a.id] || 1.0;
+            const newP = Math.max(10, Math.round(a.price * mult));
+            a.price = newP;
+            a.history.push(newP);
+        });
+
+        const headline = (currentLang === 'hi') ? roundNews.headlineHi : roundNews.headlineEn;
+        document.getElementById('newsHeadline').textContent = headline;
+        speakText(headline);
+
+        updateHUD();
+        renderAssetsList();
+        drawChart();
+
+        if (currentDay === TOTAL_DAYS) {
+            document.getElementById('advanceBtnTxt').textContent = "Liquidate & Finish 🏁";
+        }
+    }
+
+    function checkFinalOutcome() {
+        // Auto liquidate all shares into cash
+        assets.forEach(a => {
+            cash += a.holdings * a.price;
+            a.holdings = 0;
+        });
+        updateHUD();
+
+        if (cash >= 15000) {
+            showVictoryScreen();
+        } else {
+            const failMsg = (currentLang === 'hi') 
+                ? `मार्केट बंद! आपका अंतिम पोर्टफोलियो $${cash.toLocaleString()} रहा। $15,000 के लक्ष्य के लिए दोबारा प्रयास करें!` 
+                : `Market closed! You reached $${cash.toLocaleString()}. Try again to hit $15,000!`;
+            speakText(failMsg);
+            alert(failMsg);
+            restartMarket();
+        }
+    }
+
+    // --- 5. Interactive Line Chart Engine ---
+    const chartCanvas = document.getElementById('chartCanvas');
+    const cCtx = chartCanvas.getContext('2d');
+
+    function drawChart() {
+        cCtx.clearRect(0, 0, chartCanvas.width, chartCanvas.height);
+
+        // Grid lines
+        cCtx.strokeStyle = "rgba(31, 41, 55, 0.7)";
+        cCtx.lineWidth = 1;
+        for (let y = 30; y < chartCanvas.height; y += 40) {
+            cCtx.beginPath(); cCtx.moveTo(0, y); cCtx.lineTo(chartCanvas.width, y); cCtx.stroke();
+        }
+
+        const activeAsset = assets.find(a => a.id === selectedAssetId);
+        if (!activeAsset) return;
+
+        const hist = activeAsset.history;
+        const maxVal = Math.max(...hist, 600);
+        const minVal = Math.min(...hist, 20);
+
+        const stepX = (chartCanvas.width - 80) / Math.max(1, hist.length - 1);
+
+        // Draw Line Chart
+        cCtx.strokeStyle = "#10b981";
+        cCtx.lineWidth = 3.5;
+        cCtx.beginPath();
+
+        hist.forEach((val, idx) => {
+            const x = 40 + idx * stepX;
+            const y = chartCanvas.height - 30 - ((val - minVal) / (maxVal - minVal)) * (chartCanvas.height - 70);
+
+            if (idx === 0) cCtx.moveTo(x, y);
+            else cCtx.lineTo(x, y);
+        });
+        cCtx.stroke();
+
+        // Draw Nodes
+        hist.forEach((val, idx) => {
+            const x = 40 + idx * stepX;
+            const y = chartCanvas.height - 30 - ((val - minVal) / (maxVal - minVal)) * (chartCanvas.height - 70);
+
+            cCtx.fillStyle = "#020617";
+            cCtx.beginPath();
+            cCtx.arc(x, y, 6, 0, Math.PI * 2);
+            cCtx.fill();
+
+            cCtx.strokeStyle = "#34d399";
+            cCtx.lineWidth = 2.5;
+            cCtx.stroke();
+
+            // Price Labels
+            cCtx.fillStyle = "#94a3b8";
+            cCtx.font = "11px Fira Code";
+            cCtx.fillText(`$${val}`, x - 12, y - 12);
+        });
+
+        // Asset Title watermark
+        cCtx.fillStyle = "rgba(56, 189, 248, 0.15)";
+        cCtx.font = "bold 28px Rajdhani";
+        cCtx.fillText(`${activeAsset.name} (${activeAsset.icon})`, 40, 50);
+    }
+
+    // --- 6. Screen State Handlers & Translation ---
+    function showVictoryScreen() {
+        document.getElementById('playArea').classList.add('d-none');
+        document.getElementById('victoryArea').classList.remove('d-none');
+        confetti({ particleCount: 170, spread: 90, origin: { y: 0.55 } });
+
+        const netWorth = calculateNetWorth();
+        const retPct = (((netWorth - 10000) / 10000) * 100).toFixed(1);
+        document.getElementById('finalReturnScore').textContent = `+${retPct}% ($${netWorth.toLocaleString()})`;
+
+        if (currentLang === 'hi') {
+            document.getElementById('winTitle').textContent = "वॉल स्ट्रीट मास्टर!";
+            document.getElementById('winSubtitle').textContent = "आपने $10,000 की पूंजी को $15,000 से भी अधिक में बदल दिया!";
+        } else {
+            document.getElementById('winTitle').textContent = "WALL STREET PRO!";
+            document.getElementById('winSubtitle').textContent = "You multiplied your capital from $10,000 to over $15,000!";
+        }
+
+        const cheer = (currentLang === 'hi')
+            ? "बधाई हो! आपने समाचार के आधार पर स्मार्ट निवेश करके भारी मुनाफा कमाया!"
+            : "Outstanding! You mastered economic cycles and news-driven trading!";
+        speakText(cheer);
+    }
+
+    function restartMarket() {
+        currentDay = 1;
+        cash = 10000;
+        assets.forEach(a => {
+            a.holdings = 0;
+            a.price = a.history[0];
+            a.history = [a.history[0]];
+        });
+        document.getElementById('advanceBtnTxt').textContent = "Next Market Day ⏩";
+        document.getElementById('victoryArea').classList.add('d-none');
+        document.getElementById('playArea').classList.remove('d-none');
+        updateHUD();
+        renderAssetsList();
+        drawChart();
+    }
+
+    function toggleLanguage() {
+        currentLang = (currentLang === 'hi') ? 'en' : 'hi';
+        document.getElementById('langBtn').textContent = (currentLang === 'hi') ? "🌐 Switch to English" : "🌐 हिंदी में बदलें";
+        document.getElementById('guideBtnTxt').textContent = (currentLang === 'hi') ? "मार्गदर्शन" : "Guide";
+
+        if (currentLang === 'hi') {
+            document.getElementById('tutHeading').textContent = "मार्केट सिम्युलेटर: कैसे खेलें 📈";
+            document.getElementById('tutSub').textContent = "मार्केट की ताज़ा खबरें पढ़ें और शेयरों की कीमतों का अनुमान लगाएं:";
+            document.getElementById('tutStartBtn').textContent = "ट्रेडिंग शुरू करें ($10,000 तैयार)";
+            document.getElementById('demoGuideTxt').textContent = "रणनीति: अच्छी खबर से दाम बढ़ते हैं (BUY करें)! खराब खबर से दाम गिरते हैं (SELL करें)!";
+        } else {
+            document.getElementById('tutHeading').textContent = "MARKET SIMULATOR: HOW TO PLAY 📈";
+            document.getElementById('tutSub').textContent = "Analyze simulated market headlines and predict stock movements:";
+            document.getElementById('tutStartBtn').textContent = "START TRADING ($10,000 READY)";
+            document.getElementById('demoGuideTxt').textContent = "Strategy: 'Good News' raises price (BUY early)! 'Bad News' drops price (SELL)!";
+        }
+
+        renderAssetsList();
+    }
+
+    window.onload = () => {
+        loadVoices();
+        updateHUD();
+        renderAssetsList();
+        drawChart();
+        runDemoLoop();
+    };
+</script>
+</body>
+</html>

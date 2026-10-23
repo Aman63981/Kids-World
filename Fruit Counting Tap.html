@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fruit Counting Tap - KidsWorld</title>
+
+    <!-- Favicon: Laughing Kid Face -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='28' fill='%23FACC15' stroke='%231E293B' stroke-width='2'/%3E%3Cpath d='M19 26c.5-4 6.5-4 7 0M38 26c.5-4 6.5-4 7 0' stroke='%231E293B' stroke-width='3.5' stroke-linecap='round' fill='none'/%3E%3Ccircle cx='16' cy='33' r='4.5' fill='%23FB7185'/%3E%3Ccircle cx='48' cy='33' r='4.5' fill='%23FB7185'/%3E%3Cpath d='M22 34c0 0 1 12 10 12s10-12 10-12Z' fill='%23881337' stroke='%231E293B' stroke-width='2'/%3E%3Cellipse cx='32' cy='44' rx='6' ry='3.5' fill='%23F43F5E'/%3E%3C/svg%3E">
+
+    <!-- Bootstrap 5 & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Fredoka Kids Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
+    
+    <!-- Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Fredoka', cursive, sans-serif;
+            background: linear-gradient(180deg, #bae6fd 0%, #bbf7d0 60%, #86efac 100%);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            user-select: none;
+            touch-action: manipulation;
+            overflow: hidden;
+        }
+
+        .game-wrapper {
+            width: 95%;
+            max-width: 860px;
+            background: #ffffff;
+            border-radius: 36px;
+            padding: 24px;
+            box-shadow: 0 20px 45px rgba(0,0,0,0.12);
+            border: 6px solid #4ade80;
+            position: relative;
+        }
+
+        /* Top Header Badges */
+        .badge-pill-custom {
+            border-radius: 50px;
+            padding: 8px 18px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* The Orchard Tree Play Stage */
+        .orchard-stage {
+            position: relative;
+            width: 100%;
+            height: 480px;
+            background: linear-gradient(180deg, #e0f2fe 0%, #dcfce7 65%, #a7f3d0 100%);
+            border-radius: 28px;
+            overflow: hidden;
+            border: 4px dashed #86efac;
+            margin-top: 15px;
+        }
+
+        /* Cartoon Tree SVG Positioning */
+        .tree-container {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 480px;
+            height: 380px;
+            pointer-events: none;
+        }
+
+        /* Hanging Fruits on the Tree */
+        .fruit-node {
+            position: absolute;
+            width: 68px;
+            height: 68px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3.2rem;
+            cursor: pointer;
+            z-index: 10;
+            filter: drop-shadow(0 8px 6px rgba(0,0,0,0.18));
+            transition: transform 0.15s ease-in-out;
+            animation: gentleSway 3s ease-in-out infinite alternate;
+        }
+        .fruit-node:hover {
+            transform: scale(1.15) !important;
+        }
+        .fruit-node:active {
+            transform: scale(0.9) !important;
+        }
+
+        @keyframes gentleSway {
+            0% { transform: rotate(-4deg); }
+            100% { transform: rotate(4deg); }
+        }
+
+        /* Basket at Bottom */
+        .basket-dock {
+            position: absolute;
+            bottom: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 190px;
+            height: 100px;
+            z-index: 5;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            pointer-events: none;
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .basket-dock.bounce {
+            transform: translateX(-50%) scale(1.22);
+        }
+
+        .basket-graphic {
+            width: 100%;
+            height: 80px;
+        }
+
+        .basket-counter {
+            position: absolute;
+            top: 28px;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+        }
+
+        /* Falling Fruit Animation Container */
+        .falling-fruit {
+            position: absolute;
+            font-size: 3.2rem;
+            z-index: 20;
+            pointer-events: none;
+            transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        /* Kid Action Buttons */
+        .kid-btn {
+            border-radius: 22px;
+            border-bottom: 5px solid rgba(0,0,0,0.18) !important;
+            font-weight: 700;
+            transition: all 0.15s ease-in-out;
+        }
+        .kid-btn:active {
+            transform: translateY(3px);
+            border-bottom: 2px solid rgba(0,0,0,0.18) !important;
+        }
+
+        .speaker-bubble {
+            background: #f59e0b;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 8px 18px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #b45309;
+        }
+        .speaker-bubble:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #b45309;
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-wrapper">
+    <!-- Top Status Bar -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <a href="../Home page.html" class="btn btn-outline-secondary kid-btn py-2 px-3">
+            <i class="bi bi-arrow-left me-1"></i> Dashboard
+        </a>
+        <button class="btn btn-warning kid-btn px-3 py-2" id="langBtn" onclick="toggleLanguage()">
+            🌐 Switch to English
+        </button>
+        <span class="badge bg-success badge-pill-custom" id="scoreBadge">
+            ⭐ 0
+        </span>
+    </div>
+
+    <!-- Active Stage -->
+    <div id="playArea">
+        <div class="d-flex justify-content-center align-items-center gap-3 mt-3 text-center">
+            <h2 class="fw-bold text-primary m-0" id="questPrompt">3 सेब पर टैप करें! 🍎</h2>
+            <button class="speaker-bubble" onclick="replayQuestVoice()">
+                <i class="bi bi-volume-up-fill fs-5"></i>
+            </button>
+        </div>
+
+        <div class="orchard-stage" id="orchardStage">
+            <!-- Lush Tree Graphic -->
+            <svg class="tree-container" viewBox="0 0 400 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Tree Trunk -->
+                <path d="M175 190L165 310H235L225 190H175Z" fill="#854D0E" stroke="#583101" stroke-width="6"/>
+                <!-- Tree Leaves Layers -->
+                <circle cx="200" cy="120" r="110" fill="#22C55E"/>
+                <circle cx="120" cy="140" r="75" fill="#16A34A"/>
+                <circle cx="280" cy="140" r="75" fill="#16A34A"/>
+                <circle cx="160" cy="80" r="70" fill="#4ADE80"/>
+                <circle cx="240" cy="80" r="70" fill="#4ADE80"/>
+            </svg>
+
+            <!-- Fruits layer will be generated dynamically -->
+            <div id="fruitsContainer"></div>
+
+            <!-- Animated Basket Base -->
+            <div class="basket-dock" id="basketDock">
+                <svg class="basket-graphic" viewBox="0 0 160 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M15 15L30 75H130L145 15H15Z" fill="#D97706" stroke="#92400E" stroke-width="5"/>
+                    <line x1="20" y1="35" x2="140" y2="35" stroke="#B45309" stroke-width="4"/>
+                    <line x1="25" y1="55" x2="135" y2="55" stroke="#B45309" stroke-width="4"/>
+                    <line x1="50" y1="15" x2="60" y2="75" stroke="#B45309" stroke-width="4"/>
+                    <line x1="80" y1="15" x2="80" y2="75" stroke="#B45309" stroke-width="4"/>
+                    <line x1="110" y1="15" x2="100" y2="75" stroke="#B45309" stroke-width="4"/>
+                </svg>
+                <span class="basket-counter" id="basketCounter">0 / 3</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Victory Screen -->
+    <div id="victoryArea" class="d-none text-center py-4">
+        <div style="font-size: 5rem;">🧺 🍎 🍌 🎉</div>
+        <h1 class="display-5 fw-bolder text-success mb-2" id="winTitle">शानदार गिनती!</h1>
+        <p class="fs-4 text-secondary mb-3" id="winSubtitle">आपने सभी फल सही-सही गिनकर टोकरी में भर दिए!</p>
+
+        <div class="card p-3 my-3 mx-auto shadow-sm rounded-4 border-0 text-center" style="max-width: 360px; background: #fef08a; border: 3px dashed #f59e0b !important;">
+            <span class="text-muted fw-bold">TOTAL STARS</span>
+            <h1 class="display-4 fw-bold text-dark my-1" id="finalStarsDisplay">⭐ 500</h1>
+            <div class="fs-3 text-warning">⭐⭐⭐⭐⭐</div>
+            <span class="badge bg-success rounded-pill px-3 py-2 mt-2 fs-6">बैज: फ्रूट मास्टर 🍏</span>
+        </div>
+
+        <div class="d-flex justify-content-center gap-3 mt-4">
+            <button class="btn btn-warning kid-btn px-4 py-3 fs-5" onclick="restartQuest()">
+                <i class="bi bi-arrow-clockwise me-1"></i> फिर से खेलें
+            </button>
+            <a href="../Home page.html" class="btn btn-primary kid-btn text-white px-4 py-3 fs-5 text-decoration-none">
+                <i class="bi bi-house-door me-1"></i> डैशबोर्ड
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- 1. Audio Synthesizer Engine (Instant Responsive Pop & Fanfare) ---
+    let audioCtx = null;
+    function getAudioContext() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        return audioCtx;
+    }
+
+    function playBouncyPop(frequency = 500) {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(frequency, now);
+        osc.frequency.exponentialRampToValueAtTime(frequency * 2.2, now + 0.12);
+
+        gain.gain.setValueAtTime(0.5, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.12);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.12);
+    }
+
+    function playWrongBoing() {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(220, now);
+        osc.frequency.linearRampToValueAtTime(110, now + 0.25);
+
+        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.25);
+    }
+
+    function playVictoryChime() {
+        const ctx = getAudioContext();
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.12);
+            gain.gain.setValueAtTime(0.3, ctx.currentTime + idx * 0.12);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + idx * 0.12 + 0.4);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(ctx.currentTime + idx * 0.12);
+            osc.stop(ctx.currentTime + idx * 0.12 + 0.4);
+        });
+    }
+
+    // --- 2. Voice Speech Synthesis Engine ---
+    let currentLang = 'hi'; // 'hi' or 'en'
+    let availableVoices = [];
+
+    function loadVoices() {
+        if ('speechSynthesis' in window) {
+            availableVoices = window.speechSynthesis.getVoices();
+        }
+    }
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+
+    function speakText(text) {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.rate = 0.9;
+        utter.pitch = 1.3;
+
+        if (availableVoices.length === 0) availableVoices = window.speechSynthesis.getVoices();
+
+        if (currentLang === 'hi') {
+            utter.lang = 'hi-IN';
+            const v = availableVoices.find(item => item.lang.includes('hi'));
+            if (v) utter.voice = v;
+        } else {
+            utter.lang = 'en-US';
+            const v = availableVoices.find(item => item.lang.includes('en') && (item.name.includes('Samantha') || item.name.includes('Zira') || item.name.includes('Female')));
+            if (v) utter.voice = v;
+        }
+        window.speechSynthesis.speak(utter);
+    }
+
+    // --- 3. Fruit Quest Dataset ---
+    const fruitTypes = [
+        { id: 'apple', emoji: '🍎', nameHi: 'सेब', nameEn: 'Apples', singleEn: 'Apple' },
+        { id: 'banana', emoji: '🍌', nameHi: 'केले', nameEn: 'Bananas', singleEn: 'Banana' },
+        { id: 'mango', emoji: '🥭', nameHi: 'आम', nameEn: 'Mangoes', singleEn: 'Mango' },
+        { id: 'orange', emoji: '🍊', nameHi: 'संतरे', nameEn: 'Oranges', singleEn: 'Orange' }
+    ];
+
+    // Tree coordinates for natural placement
+    const treePositions = [
+        { top: 55, left: 24 }, { top: 40, left: 45 }, { top: 60, left: 66 },
+        { top: 120, left: 18 }, { top: 110, left: 36 }, { top: 105, left: 54 }, { top: 130, left: 74 },
+        { top: 180, left: 26 }, { top: 175, left: 46 }, { top: 180, left: 66 }
+    ];
+
+    let currentQuestFruit = null;
+    let targetCount = 3;
+    let collectedCount = 0;
+    let totalScore = 0;
+    let roundNumber = 0;
+    const TOTAL_ROUNDS = 5;
+
+    // --- 4. Game Setup & Mechanics ---
+    function initRound() {
+        collectedCount = 0;
+        const fruitsContainer = document.getElementById('fruitsContainer');
+        fruitsContainer.innerHTML = '';
+
+        // Pick a target fruit and count (2 to 5)
+        currentQuestFruit = fruitTypes[Math.floor(Math.random() * fruitTypes.length)];
+        targetCount = Math.floor(Math.random() * 4) + 2; // 2, 3, 4, or 5
+
+        updateQuestBanner();
+        document.getElementById('basketCounter').textContent = `0 / ${targetCount}`;
+
+        // Distribute target fruits and decoy fruits
+        const spots = [...treePositions].sort(() => 0.5 - Math.random());
+        
+        // Spawn exact number of target fruits (or +1 extra)
+        for (let i = 0; i < targetCount; i++) {
+            createFruitElement(currentQuestFruit, spots[i]);
+        }
+
+        // Spawn decoys in remaining positions
+        const otherFruits = fruitTypes.filter(f => f.id !== currentQuestFruit.id);
+        for (let i = targetCount; i < spots.length; i++) {
+            const decoy = otherFruits[Math.floor(Math.random() * otherFruits.length)];
+            createFruitElement(decoy, spots[i]);
+        }
+
+        setTimeout(() => replayQuestVoice(), 400);
+    }
+
+    function createFruitElement(fruitObj, pos) {
+        const fruitsContainer = document.getElementById('fruitsContainer');
+        const fruit = document.createElement('div');
+        fruit.className = 'fruit-node';
+        fruit.textContent = fruitObj.emoji;
+        fruit.style.top = `${pos.top}px`;
+        fruit.style.left = `${pos.left}%`;
+
+        fruit.onclick = (e) => onFruitTap(fruit, fruitObj, e);
+        fruitsContainer.appendChild(fruit);
+    }
+
+    function onFruitTap(fruitElement, fruitObj, event) {
+        getAudioContext();
+
+        if (fruitObj.id === currentQuestFruit.id) {
+            // Correct Fruit Tapped
+            collectedCount++;
+            playBouncyPop(400 + collectedCount * 120);
+
+            // Announce current number (1, 2, 3...)
+            const countSpeech = (currentLang === 'hi') 
+                ? `${collectedCount}` 
+                : `${collectedCount}`;
+            speakText(countSpeech);
+
+            // Trigger Falling Animation to the Basket
+            animateFruitFall(fruitElement, fruitObj.emoji);
+
+            document.getElementById('basketCounter').textContent = `${collectedCount} / ${targetCount}`;
+
+            // Basket Bounce Reaction
+            const basket = document.getElementById('basketDock');
+            basket.classList.add('bounce');
+            setTimeout(() => basket.classList.remove('bounce'), 250);
+
+            // Check if quest completed
+            if (collectedCount >= targetCount) {
+                totalScore += 100;
+                document.getElementById('scoreBadge').textContent = `⭐ ${totalScore}`;
+                confetti({ particleCount: 80, spread: 70, origin: { y: 0.7 } });
+
+                setTimeout(() => {
+                    const praise = (currentLang === 'hi') 
+                        ? `शाबाश! आपने ${targetCount} ${currentQuestFruit.nameHi} इकट्ठे कर लिए!` 
+                        : `Great job! You collected ${targetCount} ${currentQuestFruit.nameEn}!`;
+                    speakText(praise);
+                }, 400);
+
+                setTimeout(() => {
+                    roundNumber++;
+                    if (roundNumber < TOTAL_ROUNDS) {
+                        initRound();
+                    } else {
+                        showVictory();
+                    }
+                }, 2200);
+            }
+
+        } else {
+            // Wrong fruit tapped
+            playWrongBoing();
+            fruitElement.style.animation = "none";
+            fruitElement.style.transform = "scale(0.85) rotate(-15deg)";
+            setTimeout(() => {
+                fruitElement.style.transform = "scale(1) rotate(0deg)";
+                fruitElement.style.animation = "gentleSway 3s ease-in-out infinite alternate";
+            }, 300);
+
+            const oopsText = (currentLang === 'hi') 
+                ? `यह नहीं! हमें ${currentQuestFruit.nameHi} चाहिए।` 
+                : `Not this one! Tap the ${currentQuestFruit.nameEn}.`;
+            speakText(oopsText);
+        }
+    }
+
+    // Physical Falling Motion into Basket
+    function animateFruitFall(fruitEl, emoji) {
+        const stage = document.getElementById('orchardStage');
+        const rect = fruitEl.getBoundingClientRect();
+        const stageRect = stage.getBoundingClientRect();
+
+        const startX = rect.left - stageRect.left;
+        const startY = rect.top - stageRect.top;
+
+        fruitEl.style.visibility = 'hidden'; // Hide tree fruit
+
+        const drop = document.createElement('div');
+        drop.className = 'falling-fruit';
+        drop.textContent = emoji;
+        drop.style.left = `${startX}px`;
+        drop.style.top = `${startY}px`;
+
+        stage.appendChild(drop);
+
+        // Animate to Basket Center
+        requestAnimationFrame(() => {
+            drop.style.left = 'calc(50% - 25px)';
+            drop.style.top = '390px';
+            drop.style.transform = 'scale(0.7) rotate(45deg)';
+            drop.style.opacity = '0.9';
+        });
+
+        setTimeout(() => drop.remove(), 520);
+    }
+
+    function updateQuestBanner() {
+        const promptEl = document.getElementById('questPrompt');
+        if (currentLang === 'hi') {
+            promptEl.textContent = `${targetCount} ${currentQuestFruit.nameHi} पर टैप करें! ${currentQuestFruit.emoji}`;
+            document.getElementById('langBtn').textContent = "🌐 Switch to English";
+        } else {
+            promptEl.textContent = `Tap ${targetCount} ${currentQuestFruit.nameEn}! ${currentQuestFruit.emoji}`;
+            document.getElementById('langBtn').textContent = "🌐 हिंदी में बदलें";
+        }
+    }
+
+    function replayQuestVoice() {
+        const questText = (currentLang === 'hi') 
+            ? `क्या आप ${targetCount} ${currentQuestFruit.nameHi} पर टैप कर सकते हैं?` 
+            : `Can you tap ${targetCount} ${currentQuestFruit.nameEn}?`;
+        speakText(questText);
+    }
+
+    function toggleLanguage() {
+        currentLang = (currentLang === 'hi') ? 'en' : 'hi';
+        updateQuestBanner();
+        replayQuestVoice();
+    }
+
+    function showVictory() {
+        document.getElementById('playArea').classList.add('d-none');
+        document.getElementById('victoryArea').classList.remove('d-none');
+        document.getElementById('finalStarsDisplay').textContent = `⭐ ${totalScore}`;
+
+        if (currentLang === 'hi') {
+            document.getElementById('winTitle').textContent = "शानदार गिनती!";
+            document.getElementById('winSubtitle').textContent = "आपने सभी फल सही-सही गिनकर टोकरी में भर दिए!";
+        } else {
+            document.getElementById('winTitle').textContent = "Counting Master!";
+            document.getElementById('winSubtitle').textContent = "You collected and counted all the fruits accurately!";
+        }
+
+        playVictoryChime();
+        confetti({ particleCount: 150, spread: 90, origin: { y: 0.5 } });
+
+        setTimeout(() => {
+            const cheer = (currentLang === 'hi') 
+                ? "हुर्रे! आपने फ्रूट काउंटिंग पूरी कर ली!" 
+                : "Hooray! You completed the Fruit Counting Quest!";
+            speakText(cheer);
+        }, 500);
+    }
+
+    function restartQuest() {
+        roundNumber = 0;
+        totalScore = 0;
+        document.getElementById('scoreBadge').textContent = '⭐ 0';
+        document.getElementById('victoryArea').classList.add('d-none');
+        document.getElementById('playArea').classList.remove('d-none');
+        initRound();
+    }
+
+    window.onload = () => {
+        loadVoices();
+        initRound();
+    };
+</script>
+</body>
+</html>

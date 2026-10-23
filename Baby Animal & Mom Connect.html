@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baby Animal & Mom Connect - KidsWorld</title>
+
+    <!-- Favicon: Laughing Kid Face -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='28' fill='%23FACC15' stroke='%231E293B' stroke-width='2'/%3E%3Cpath d='M19 26c.5-4 6.5-4 7 0M38 26c.5-4 6.5-4 7 0' stroke='%231E293B' stroke-width='3.5' stroke-linecap='round' fill='none'/%3E%3Ccircle cx='16' cy='33' r='4.5' fill='%23FB7185'/%3E%3Ccircle cx='48' cy='33' r='4.5' fill='%23FB7185'/%3E%3Cpath d='M22 34c0 0 1 12 10 12s10-12 10-12Z' fill='%23881337' stroke='%231E293B' stroke-width='2'/%3E%3Cellipse cx='32' cy='44' rx='6' ry='3.5' fill='%23F43F5E'/%3E%3C/svg%3E">
+
+    <!-- Bootstrap 5.3 & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Fredoka Kids Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
+    
+    <!-- Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Fredoka', cursive, sans-serif;
+            background: linear-gradient(180deg, #fdf2f8 0%, #fce7f3 50%, #fbcfe8 100%);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            user-select: none;
+            touch-action: manipulation;
+            overflow: hidden;
+        }
+
+        .game-wrapper {
+            width: 95%;
+            max-width: 900px;
+            background: #ffffff;
+            border-radius: 36px;
+            padding: 24px;
+            box-shadow: 0 20px 45px rgba(0,0,0,0.12);
+            border: 6px solid #f472b6;
+            position: relative;
+        }
+
+        .badge-pill-custom {
+            border-radius: 50px;
+            padding: 8px 18px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Play Stage */
+        .pairing-stage {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            background: linear-gradient(180deg, #fff1f2 0%, #fdf4ff 100%);
+            border-radius: 28px;
+            overflow: hidden;
+            border: 4px dashed #f472b6;
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+        }
+
+        /* SVG Line Drawing Overlay */
+        #connectionSvg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .connect-line {
+            stroke: #ec4899;
+            stroke-width: 6;
+            stroke-linecap: round;
+            stroke-dasharray: 12, 8;
+            animation: dashMove 1s linear infinite;
+        }
+        @keyframes dashMove {
+            to { stroke-dashoffset: -20; }
+        }
+
+        /* Columns */
+        .column-side {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            z-index: 10;
+            width: 38%;
+        }
+
+        /* Animal Interactive Cards */
+        .animal-card {
+            background: #ffffff;
+            border: 4px solid #fbcfe8;
+            border-radius: 22px;
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 8px 0px rgba(244, 114, 182, 0.2);
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+        }
+        .animal-card:hover {
+            transform: scale(1.04);
+            border-color: #f472b6;
+        }
+        .animal-card:active {
+            transform: scale(0.96);
+        }
+
+        /* Selected State */
+        .animal-card.selected {
+            border-color: #ec4899;
+            background: #fdf2f8;
+            box-shadow: 0 0 18px rgba(236, 72, 153, 0.45);
+            transform: scale(1.06);
+            animation: softPulse 1.2s infinite alternate;
+        }
+        @keyframes softPulse {
+            0% { transform: scale(1.05); }
+            100% { transform: scale(1.09); }
+        }
+
+        /* Matched Done State */
+        .animal-card.matched {
+            border-color: #22c55e;
+            background: #f0fdf4;
+            box-shadow: 0 6px 0px rgba(34, 197, 94, 0.2);
+            cursor: default;
+            pointer-events: none;
+        }
+
+        .animal-emoji {
+            font-size: 2.8rem;
+            line-height: 1;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.12));
+        }
+
+        .animal-meta {
+            display: flex;
+            flex-direction: column;
+        }
+        .animal-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1e293b;
+            line-height: 1.1;
+        }
+        .animal-tag {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #ec4899;
+        }
+
+        /* Running Baby Animation */
+        .run-to-mom {
+            position: absolute !important;
+            z-index: 50 !important;
+            transition: all 0.75s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+        }
+
+        /* Floating Love Hearts */
+        .love-heart {
+            position: absolute;
+            font-size: 2.2rem;
+            pointer-events: none;
+            z-index: 30;
+            animation: riseHeart 0.9s ease-out forwards;
+        }
+        @keyframes riseHeart {
+            0% { transform: translate(-50%, -50%) scale(0.4); opacity: 1; }
+            50% { transform: translate(-50%, -100%) scale(1.4); opacity: 0.9; }
+            100% { transform: translate(-50%, -150%) scale(1); opacity: 0; }
+        }
+
+        /* Wrong Shake */
+        .wrong-jiggle {
+            animation: cardWobble 0.4s ease-in-out;
+        }
+        @keyframes cardWobble {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-10px); }
+            40% { transform: translateX(10px); }
+            60% { transform: translateX(-6px); }
+            80% { transform: translateX(6px); }
+        }
+
+        /* Buttons */
+        .kid-btn {
+            border-radius: 22px;
+            border-bottom: 5px solid rgba(0,0,0,0.18) !important;
+            font-weight: 700;
+            transition: all 0.15s ease-in-out;
+        }
+        .kid-btn:active {
+            transform: translateY(3px);
+            border-bottom: 2px solid rgba(0,0,0,0.18) !important;
+        }
+
+        .speaker-bubble {
+            background: #f59e0b;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            padding: 8px 18px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #b45309;
+        }
+        .speaker-bubble:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #b45309;
+        }
+    </style>
+</head>
+<body>
+
+<div class="game-wrapper">
+    <!-- Top Bar -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <a href="../Home page.html" class="btn btn-outline-secondary kid-btn py-2 px-3">
+            <i class="bi bi-arrow-left me-1"></i> Dashboard
+        </a>
+        <button class="btn btn-warning kid-btn px-3 py-2" id="langBtn" onclick="toggleLanguage()">
+            🌐 Switch to English
+        </button>
+        <span class="badge bg-danger badge-pill-custom" id="scoreBadge">
+            💖 0 / 4
+        </span>
+    </div>
+
+    <!-- Active Stage -->
+    <div id="playArea">
+        <div class="d-flex justify-content-center align-items-center gap-3 mt-3 text-center">
+            <h2 class="fw-bold text-dark m-0" id="questPrompt">बच्चे को उसकी मम्मी से मिलाओ! 🐾</h2>
+            <button class="speaker-bubble" onclick="replayQuestVoice()">
+                <i class="bi bi-volume-up-fill fs-5"></i>
+            </button>
+        </div>
+
+        <div class="pairing-stage" id="pairingStage">
+            <!-- Connecting SVG Line Overlay -->
+            <svg id="connectionSvg"></svg>
+
+            <!-- Left: Baby Animals -->
+            <div class="column-side" id="babiesColumn"></div>
+
+            <!-- Right: Parent / Mom Animals -->
+            <div class="column-side" id="parentsColumn"></div>
+        </div>
+    </div>
+
+    <!-- Victory Screen -->
+    <div id="victoryArea" class="d-none text-center py-4">
+        <div style="font-size: 5rem;">🐱 🐶 🐮 🦆 💖 🏆</div>
+        <h1 class="display-5 fw-bolder text-danger mb-2" id="winTitle">प्यारा मिलन!</h1>
+        <p class="fs-4 text-secondary mb-3" id="winSubtitle">आपने सभी प्यारे बच्चों को उनकी मम्मी से सही-सही मिला दिया!</p>
+
+        <div class="card p-3 my-3 mx-auto shadow-sm rounded-4 border-0 text-center" style="max-width: 360px; background: #fef08a; border: 3px dashed #f59e0b !important;">
+            <span class="text-muted fw-bold">KINDNESS SCORE</span>
+            <h1 class="display-4 fw-bold text-dark my-1">⭐ 500</h1>
+            <div class="fs-3 text-warning">⭐⭐⭐⭐⭐</div>
+            <span class="badge bg-danger rounded-pill px-3 py-2 mt-2 fs-6">बैज: एनिमल फैमिली फ्रेंड 💖</span>
+        </div>
+
+        <div class="d-flex justify-content-center gap-3 mt-4">
+            <button class="btn btn-warning kid-btn px-4 py-3 fs-5" onclick="restartQuest()">
+                <i class="bi bi-arrow-clockwise me-1"></i> फिर से खेलें
+            </button>
+            <a href="../Home page.html" class="btn btn-primary kid-btn text-white px-4 py-3 fs-5 text-decoration-none">
+                <i class="bi bi-house-door me-1"></i> डैशबोर्ड
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- 1. Web Audio Engine (Sweet Animal Chimes & Happy Reunion) ---
+    let audioCtx = null;
+    function getAudioContext() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        return audioCtx;
+    }
+
+    // High Sweet Purr / Meow / Bark synthesizer
+    function playHappyReunionSound(type) {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc1.type = 'sine';
+        osc2.type = 'triangle';
+
+        // Sweet rising chime
+        osc1.frequency.setValueAtTime(587.33, now); // D5
+        osc1.frequency.exponentialRampToValueAtTime(880, now + 0.2); // A5
+
+        osc2.frequency.setValueAtTime(880, now);
+        osc2.frequency.exponentialRampToValueAtTime(1174.66, now + 0.2); // D6
+
+        gain.gain.setValueAtTime(0.35, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.35);
+
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + 0.35);
+        osc2.stop(now + 0.35);
+    }
+
+    function playWrongSound() {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(240, now);
+        osc.frequency.linearRampToValueAtTime(120, now + 0.25);
+
+        gain.gain.setValueAtTime(0.3, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.25);
+    }
+
+    function playVictoryChime() {
+        const ctx = getAudioContext();
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.12);
+            gain.gain.setValueAtTime(0.3, ctx.currentTime + idx * 0.12);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + idx * 0.12 + 0.4);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(ctx.currentTime + idx * 0.12);
+            osc.stop(ctx.currentTime + idx * 0.12 + 0.4);
+        });
+    }
+
+    // --- 2. Voice Speech Guidance Engine ---
+    let currentLang = 'hi';
+    let availableVoices = [];
+
+    function loadVoices() {
+        if ('speechSynthesis' in window) {
+            availableVoices = window.speechSynthesis.getVoices();
+        }
+    }
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+
+    function speakText(text) {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.rate = 0.88;
+        utter.pitch = 1.35;
+
+        if (availableVoices.length === 0) availableVoices = window.speechSynthesis.getVoices();
+
+        if (currentLang === 'hi') {
+            utter.lang = 'hi-IN';
+            const v = availableVoices.find(item => item.lang.includes('hi'));
+            if (v) utter.voice = v;
+        } else {
+            utter.lang = 'en-US';
+            const v = availableVoices.find(item => item.lang.includes('en') && (item.name.includes('Samantha') || item.name.includes('Zira') || item.name.includes('Female')));
+            if (v) utter.voice = v;
+        }
+        window.speechSynthesis.speak(utter);
+    }
+
+    // --- 3. Animal Family Dataset ---
+    const animalPairs = [
+        {
+            id: 'cat',
+            baby: { emoji: '🐱', nameHi: 'बिल्ली का बच्चा', nameEn: 'Kitten', tagHi: 'बेबी', tagEn: 'Baby' },
+            mom: { emoji: '🐈', nameHi: 'बिल्ली', nameEn: 'Cat', tagHi: 'मम्मी', tagEn: 'Mom' }
+        },
+        {
+            id: 'dog',
+            baby: { emoji: '🐶', nameHi: 'पिल्ला', nameEn: 'Puppy', tagHi: 'बेबी', tagEn: 'Baby' },
+            mom: { emoji: '🐕', nameHi: 'कुत्ता', nameEn: 'Dog', tagHi: 'मम्मी', tagEn: 'Mom' }
+        },
+        {
+            id: 'cow',
+            baby: { emoji: '🐮', nameHi: 'बछड़ा', nameEn: 'Calf', tagHi: 'बेबी', tagEn: 'Baby' },
+            mom: { emoji: '🐄', nameHi: 'गाय', nameEn: 'Cow', tagHi: 'मम्मी', tagEn: 'Mom' }
+        },
+        {
+            id: 'duck',
+            baby: { emoji: '🐥', nameHi: 'बत्तख का बच्चा', nameEn: 'Duckling', tagHi: 'बेबी', tagEn: 'Baby' },
+            mom: { emoji: '🦆', nameHi: 'बत्तख', nameEn: 'Duck', tagHi: 'मम्मी', tagEn: 'Mom' }
+        }
+    ];
+
+    let selectedBaby = null;
+    let matchesCount = 0;
+
+    // --- 4. Setup Round & Render Stage ---
+    function initStage() {
+        selectedBaby = null;
+        matchesCount = 0;
+        document.getElementById('connectionSvg').innerHTML = '';
+        updateScoreBadge();
+
+        const babiesCol = document.getElementById('babiesColumn');
+        const parentsCol = document.getElementById('parentsColumn');
+
+        babiesCol.innerHTML = '';
+        parentsCol.innerHTML = '';
+
+        // Randomize list orders
+        const shuffledBabies = [...animalPairs].sort(() => 0.5 - Math.random());
+        const shuffledParents = [...animalPairs].sort(() => 0.5 - Math.random());
+
+        // Render Babies
+        shuffledBabies.forEach(pair => {
+            const card = document.createElement('div');
+            card.className = 'animal-card baby-card';
+            card.dataset.id = pair.id;
+            card.innerHTML = `
+                <span class="animal-emoji">${pair.baby.emoji}</span>
+                <div class="animal-meta">
+                    <span class="animal-title">${(currentLang === 'hi') ? pair.baby.nameHi : pair.baby.nameEn}</span>
+                    <span class="animal-tag">${(currentLang === 'hi') ? pair.baby.tagHi : pair.baby.tagEn}</span>
+                </div>
+            `;
+            card.onclick = () => onBabyClick(card, pair);
+            babiesCol.appendChild(card);
+        });
+
+        // Render Parents
+        shuffledParents.forEach(pair => {
+            const card = document.createElement('div');
+            card.className = 'animal-card parent-card';
+            card.dataset.id = pair.id;
+            card.innerHTML = `
+                <span class="animal-emoji">${pair.mom.emoji}</span>
+                <div class="animal-meta">
+                    <span class="animal-title">${(currentLang === 'hi') ? pair.mom.nameHi : pair.mom.nameEn}</span>
+                    <span class="animal-tag">${(currentLang === 'hi') ? pair.mom.tagHi : pair.mom.tagEn}</span>
+                </div>
+            `;
+            card.onclick = () => onParentClick(card, pair);
+            parentsCol.appendChild(card);
+        });
+
+        setTimeout(() => replayQuestVoice(), 400);
+    }
+
+    // --- 5. Matching & Interaction Mechanics ---
+    function onBabyClick(babyCard, pair) {
+        getAudioContext();
+        if (babyCard.classList.contains('matched')) return;
+
+        // Deselect previous baby if any
+        document.querySelectorAll('.baby-card').forEach(c => c.classList.remove('selected'));
+
+        selectedBaby = { element: babyCard, pair: pair };
+        babyCard.classList.add('selected');
+
+        const voicePrompt = (currentLang === 'hi') 
+            ? `${pair.baby.nameHi}! इसकी मम्मी कहाँ है?` 
+            : `${pair.baby.nameEn}! Where is its mom?`;
+        speakText(voicePrompt);
+    }
+
+    function onParentClick(parentCard, pair) {
+        getAudioContext();
+        if (parentCard.classList.contains('matched')) return;
+
+        if (!selectedBaby) {
+            // Agar pehle mom choose ki ho to baby choose karne ko bolein
+            const prompt = (currentLang === 'hi') 
+                ? "पहले बाईं तरफ से किसी छोटे बच्चे को छुएं!" 
+                : "Tap a cute baby on the left first!";
+            speakText(prompt);
+            return;
+        }
+
+        const babyPair = selectedBaby.pair;
+        const babyEl = selectedBaby.element;
+
+        if (babyPair.id === pair.id) {
+            // Correct Pair Match!
+            playHappyReunionSound();
+            babyEl.classList.remove('selected');
+            babyEl.classList.add('matched');
+            parentCard.classList.add('matched');
+
+            // Draw connecting dashed line
+            drawLineBetweenCards(babyEl, parentCard);
+
+            // Pop floating hearts
+            spawnHeartBurst(parentCard);
+
+            // Trigger Baby Running animation
+            animateBabyRunning(babyEl, parentCard);
+
+            matchesCount++;
+            updateScoreBadge();
+
+            const matchPraise = (currentLang === 'hi') 
+                ? `अरे वाह! ${babyPair.baby.nameHi} अपनी मम्मी ${pair.mom.nameHi} से मिल गया!` 
+                : `Yay! ${babyPair.baby.nameEn} found its mom ${pair.mom.nameEn}!`;
+            speakText(matchPraise);
+
+            selectedBaby = null;
+
+            // Check if all connected
+            if (matchesCount >= animalPairs.length) {
+                setTimeout(() => showVictory(), 1400);
+            }
+
+        } else {
+            // Wrong Match: Shake & Guide
+            playWrongSound();
+            parentCard.classList.add('wrong-jiggle');
+            babyEl.classList.add('wrong-jiggle');
+
+            setTimeout(() => {
+                parentCard.classList.remove('wrong-jiggle');
+                babyEl.classList.remove('wrong-jiggle');
+            }, 450);
+
+            const oopsText = (currentLang === 'hi') 
+                ? `नहीं, यह ${babyPair.baby.nameHi} की मम्मी नहीं है। सही मम्मी ढूंढो!` 
+                : `Oops! That is not ${babyPair.baby.nameEn}'s mom. Try again!`;
+            speakText(oopsText);
+        }
+    }
+
+    // Connect with animated SVG line
+    function drawLineBetweenCards(card1, card2) {
+        const svg = document.getElementById('connectionSvg');
+        const stage = document.getElementById('pairingStage');
+        const sRect = stage.getBoundingClientRect();
+
+        const r1 = card1.getBoundingClientRect();
+        const r2 = card2.getBoundingClientRect();
+
+        const x1 = r1.right - sRect.left;
+        const y1 = r1.top - sRect.top + r1.height / 2;
+        const x2 = r2.left - sRect.left;
+        const y2 = r2.top - sRect.top + r2.height / 2;
+
+        const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+        line.setAttribute('x1', x1);
+        line.setAttribute('y1', y1);
+        line.setAttribute('x2', x2);
+        line.setAttribute('y2', y2);
+        line.setAttribute('class', 'connect-line');
+        svg.appendChild(line);
+    }
+
+    // Baby running forward to Mom
+    function animateBabyRunning(babyEl, parentEl) {
+        const runner = babyEl.cloneNode(true);
+        const stage = document.getElementById('pairingStage');
+        const sRect = stage.getBoundingClientRect();
+        const bRect = babyEl.getBoundingClientRect();
+        const pRect = parentEl.getBoundingClientRect();
+
+        runner.classList.add('run-to-mom');
+        runner.style.position = 'absolute';
+        runner.style.left = `${bRect.left - sRect.left}px`;
+        runner.style.top = `${bRect.top - sRect.top}px`;
+        runner.style.width = `${bRect.width}px`;
+        runner.style.pointerEvents = 'none';
+
+        stage.appendChild(runner);
+
+        requestAnimationFrame(() => {
+            runner.style.left = `${pRect.left - sRect.left - 25}px`;
+            runner.style.top = `${pRect.top - sRect.top}px`;
+            runner.style.transform = 'scale(0.85) rotate(8deg)';
+            runner.style.opacity = '0.9';
+        });
+
+        setTimeout(() => runner.remove(), 760);
+    }
+
+    // Heart Particle Burst
+    function spawnHeartBurst(element) {
+        const stage = document.getElementById('pairingStage');
+        const sRect = stage.getBoundingClientRect();
+        const eRect = element.getBoundingClientRect();
+
+        const heart = document.createElement('div');
+        heart.className = 'love-heart';
+        heart.textContent = '💖';
+        heart.style.left = `${eRect.left - sRect.left + eRect.width / 2}px`;
+        heart.style.top = `${eRect.top - sRect.top}px`;
+
+        stage.appendChild(heart);
+        setTimeout(() => heart.remove(), 900);
+    }
+
+    function updateScoreBadge() {
+        document.getElementById('scoreBadge').textContent = `💖 ${matchesCount} / ${animalPairs.length}`;
+    }
+
+    function replayQuestVoice() {
+        const questText = (currentLang === 'hi') 
+            ? "छोटे बच्चे को छूकर उसकी सही मम्मी से मिलाओ!" 
+            : "Tap a baby animal and connect it to its mom!";
+        speakText(questText);
+    }
+
+    function toggleLanguage() {
+        currentLang = (currentLang === 'hi') ? 'en' : 'hi';
+        document.getElementById('langBtn').textContent = (currentLang === 'hi') ? "🌐 Switch to English" : "🌐 हिंदी में बदलें";
+        document.getElementById('questPrompt').textContent = (currentLang === 'hi') 
+            ? "बच्चे को उसकी मम्मी से मिलाओ! 🐾" 
+            : "Connect the Baby Animal to its Mom! 🐾";
+        initStage();
+    }
+
+    function showVictory() {
+        document.getElementById('playArea').classList.add('d-none');
+        document.getElementById('victoryArea').classList.remove('d-none');
+
+        if (currentLang === 'hi') {
+            document.getElementById('winTitle').textContent = "प्यारा मिलन!";
+            document.getElementById('winSubtitle').textContent = "आपने सभी प्यारे बच्चों को उनकी मम्मी से सही-सही मिला दिया!";
+        } else {
+            document.getElementById('winTitle').textContent = "Heartwarming Reunion!";
+            document.getElementById('winSubtitle').textContent = "You guided every sweet baby back to its loving mom!";
+        }
+
+        playVictoryChime();
+        confetti({ particleCount: 160, spread: 90, origin: { y: 0.55 } });
+
+        setTimeout(() => {
+            const cheer = (currentLang === 'hi') 
+                ? "हुर्रे! आपने सभी जानवरों के परिवारों को मिला दिया!" 
+                : "Hooray! You united all the animal families!";
+            speakText(cheer);
+        }, 500);
+    }
+
+    function restartQuest() {
+        document.getElementById('victoryArea').classList.add('d-none');
+        document.getElementById('playArea').classList.remove('d-none');
+        initStage();
+    }
+
+    window.onload = () => {
+        loadVoices();
+        initStage();
+    };
+</script>
+</body>
+</html>
